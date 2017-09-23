@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:background="@color/backgroundDialog"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_height="50dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:paddingRight="15dp"
+            android:textColor="#000000"
+            android:gravity="center|right"
+            android:textSize="14sp"
+            android:text="@string/data"/>
+
+        <EditText
+            android:id="@+id/inpDataDialogDeposito"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="8"
+            android:gravity="center|left"
+            android:textSize="15dp"
+            android:paddingRight="10dp"
+            android:hint="Digite a Data"
+            />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_height="50dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:paddingRight="15dp"
+            android:textColor="#000000"
+            android:gravity="center|right"
+            android:textSize="14sp"
+            android:text="@string/valor"/>
+
+        <EditText
+            android:id="@+id/inpValorDialogDeposito"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="8"
+            android:gravity="center|left"
+            android:textSize="15dp"
+            android:paddingRight="10dp"
+            android:hint="Digite o Valor"
+            />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_height="50dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:paddingRight="15dp"
+            android:textColor="#000000"
+            android:gravity="center|right"
+            android:textSize="14sp"
+            android:text="@string/moeda"/>
+
+        <Spinner
+            android:id="@+id/spnMoedaDialogDeposito"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="8"
+            android:gravity="center|left"
+            android:textSize="13dp"
+            android:paddingRight="10dp"
+
+            />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+
+
+    </LinearLayout>
+
+
+</LinearLayout>

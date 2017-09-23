@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">ManagerCoin</string>
+    <string name="compra">Compra</string>
+    <string name="data">Data:</string>
+    <string name="valor_aplicado">Valor Aplicado:</string>
+    <string name="taxa">Taxa:</string>
+    <string name="venda">Venda</string>
+    <string name="saque">Saque</string>
+    <string name="qtde">Quantidade:</string>
+    <string name="valor">Valor:</string>
+    <string name="deposito">Depósito</string>
+    <string name="moeda">Moeda:</string>
+    <string name="vendas">Vendas</string>
+    <string name="depositos">Depósitos</string>
+    <string name="compras">Compras</string>
+    <string name="saques">Saques</string>
+</resources>
