@@ -36,7 +36,9 @@ public class WebServiceUtil {
     private static final String URL_INVESTIDOR_DELETE = getUrl() + "investidor/delete";
     private static final String URL_INVESTIDOR_FIND = getUrl() + "investidor/find";
     private static final String URL_INVESTIDOR_FINDALL = getUrl() + "investidor/findAll"; 
-    
+    private static final String URL_LOGIN = getUrl() + "investidor/login";
+    private static final String URL_INVESTIDOR_FINDBYLOGIN_AND_EMAIL = getUrl() + "investidor/findByLoginAndSenha";
+
     private static final String URL_MOEDA_SAVE = getUrl() + "moeda/save";
     private static final String URL_MOEDA_UPDATE = getUrl() + "moeda/update";
     private static final String URL_MOEDA_DELETE = getUrl() + "moeda/delete";
@@ -227,5 +229,13 @@ public class WebServiceUtil {
 
     public static String getUrlVendaFindall() {
         return URL_VENDA_FINDALL;
+    }
+
+    public static String getUrlLogin() {
+        return URL_LOGIN;
+    }
+
+    public static String getUrlInvestidorFindbyloginAndEmail() {
+        return URL_INVESTIDOR_FINDBYLOGIN_AND_EMAIL;
     }
 }

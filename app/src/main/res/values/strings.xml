@@ -16,4 +16,5 @@
     <string name="saques">Saques</string>
     <string name="senha">Senha</string>
     <string name="login">Login</string>
+    <string name="nome">Nome:</string>
 </resources>

@@ -34,7 +34,6 @@ import br.com.managercoin.dominio.EntidadeDominio;
 import br.com.managercoin.dominio.Investidor;
 import br.com.managercoin.dominio.Moeda;
 import br.com.managercoin.dominio.Saque;
-import br.com.managercoin.dominio.Usuario;
 import br.com.managercoin.dominio.Venda;
 
 
@@ -289,14 +288,15 @@ public class HttpClient {
     }
 
 
+
     /**
      * @param enderecoURL - Recebe uma url
-     * @param entidade    - Recebe uma entidade Usuario
-     * @return - um Jogador válido ou NULL se não for encontrado no Banco de Dados
+     * @param entidade    - Recebe uma entidade Investidor
+     * @return - um Investidor válido ou NULL se não for encontrado no Banco de Dados
      */
-    public static Usuario login(String enderecoURL, EntidadeDominio entidade) {
+    public static Investidor login(String enderecoURL, EntidadeDominio entidade) {
 
-        Usuario usuario = new Usuario();
+        Investidor investidor = new Investidor();
 
         org.apache.http.client.HttpClient httpClient = new DefaultHttpClient();
         try {
@@ -327,17 +327,66 @@ public class HttpClient {
             }
 
             gson = new Gson();
-            Type tipo = new TypeToken<Usuario>() {
+            Type tipo = new TypeToken<Investidor>() {
             }.getType();
-            usuario = gson.fromJson(retorno.toString(), tipo);
+            investidor = gson.fromJson(retorno.toString(), tipo);
 
             content.close();
 
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
-            return null;
         }
-        return usuario;
+        return investidor;
+    }
+
+    /**
+     * @param enderecoURL - Recebe uma url
+     * @param entidade    - Recebe uma entidade Investidor
+     * @return - um Investidor válido ou NULL se não for encontrado no Banco de Dados
+     */
+    public static Investidor findByLoginAndEmail(String enderecoURL, EntidadeDominio entidade) {
+
+        Investidor investidor = new Investidor();
+
+        org.apache.http.client.HttpClient httpClient = new DefaultHttpClient();
+        try {
+            HttpPost request = new HttpPost();
+            request.setHeader("Content-Type", "application/json");
+
+            StringBuilder builder = new StringBuilder();
+
+            request.setURI(new URI(enderecoURL));
+
+            gson = new Gson();
+
+            String dados = gson.toJson(entidade);
+
+            HttpEntity entity = new StringEntity(dados);
+            request.setEntity(entity);
+
+            HttpResponse response = httpClient.execute(request);
+
+            InputStream content = response.getEntity().getContent();
+            BufferedReader br = new BufferedReader(new InputStreamReader(content));
+
+            StringBuffer retorno = new StringBuffer();
+            String output;
+
+            while ((output = br.readLine()) != null) {
+                retorno.append(output);
+            }
+
+            gson = new Gson();
+            Type tipo = new TypeToken<Investidor>() {
+            }.getType();
+            investidor = gson.fromJson(retorno.toString(), tipo);
+
+            content.close();
+
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        return investidor;
     }
 
     /**
@@ -390,5 +439,7 @@ public class HttpClient {
 
         return listaType;
     }
+
+
 
 }
