@@ -24,6 +24,7 @@
         </activity>
 
         <activity android:name=".Telas.ScreenSlidePagerActivity" />
+        <activity android:name=".Telas.ActivityLogin" android:screenOrientation="portrait"/>
 
     </application>
 

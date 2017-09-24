@@ -57,12 +57,8 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
                     return new DepositoFragment();
                 case 3: // Fragment # 0 - This will show FirstFragment
                     return new SaqueFragment();
-                case 4: // Fragment # 0 - This will show FirstFragment
-                    return new ScreenSlidePageFragment();
-                case 5: // Fragment # 0 - This will show FirstFragment different title
-                    return new ScreenSlidePageFragment2();
                 default:
-                    return new ScreenSlidePageFragment();
+                    return new CompraFragment();
 
             }
         }

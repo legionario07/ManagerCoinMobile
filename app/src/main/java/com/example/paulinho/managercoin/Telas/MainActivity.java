@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements Runnable{
 
         criarDialog();
 
-        Intent intent = new Intent(MainActivity.this, ScreenSlidePagerActivity.class);
+        Intent intent = new Intent(MainActivity.this, ActivityLogin.class);
         startActivity(intent);
 
     }

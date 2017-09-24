@@ -1,11 +1,15 @@
 package com.example.paulinho.managercoin.Telas;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Spinner;
 
@@ -26,6 +30,15 @@ public class DepositoFragment extends Fragment {
     private List<Deposito> lista;
     private ListView lstDepositos;
     private Spinner spnClassificacaoDeposito;
+
+    private LayoutInflater inflater;
+
+    private AlertDialog.Builder dialogDepositoBuilder;
+    private AlertDialog dialog;
+
+    private ImageButton imgButtonEditCrud;
+    private ImageButton imgButtonNewCrud;
+    private ImageButton imgButtonDeleteCrud;
 
     public DepositoFragment() {
         // Required empty public constructor
@@ -86,7 +99,102 @@ public class DepositoFragment extends Fragment {
         AdapterDepositos adapterDepositos = new AdapterDepositos(getActivity().getApplicationContext(), lista);
         lstDepositos.setAdapter(adapterDepositos);
 
+        lstDepositos.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+                showDialog();
+
+                return true;
+            }
+        });
+
         return rootView;
     }
+
+    /**
+     * Cria o Dialog com as opçoes Inserir, Editar e Excluir
+     */
+    private void showDialog() {
+
+        AlertDialog alert;
+        AlertDialog.Builder dialogCrud = new AlertDialog.Builder(getContext());
+
+        inflater = getActivity().getLayoutInflater();
+        final View dialogView = inflater.inflate(R.layout.dialog_crud, null);
+        dialogCrud.setView(dialogView);
+        dialogCrud.setTitle("Escolha a Opção");
+
+        View.OnClickListener criarDialog = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (imgButtonEditCrud.getId() == view.getId()) {
+                    criarDialogDeposito("Editar");
+                } else if (imgButtonNewCrud.getId() == view.getId()) {
+                    criarDialogDeposito("Novo");
+                } else {
+                    criarDialogDeposito("Deletar");
+                }
+            }
+
+        };
+
+        imgButtonEditCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonEditCrud);
+        imgButtonNewCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonNewCrud);
+        imgButtonDeleteCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonDeleteCrud);
+
+        imgButtonEditCrud.setOnClickListener(criarDialog);
+        imgButtonNewCrud.setOnClickListener(criarDialog);
+        imgButtonDeleteCrud.setOnClickListener(criarDialog);
+
+
+        dialogCrud.setNegativeButton("CANCELAR", new DialogInterface.OnClickListener()
+
+        {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+                return;
+            }
+        });
+
+        alert = dialogCrud.create();
+        alert.show();
+    }
+
+    /**
+     * Cria o dialog para realizar a operação solicitada
+     * @param operacao    Operação clicadoa {NOVO, EDITAR, DELETAR}
+     */
+    private void criarDialogDeposito(String operacao) {
+
+        dialogDepositoBuilder = new AlertDialog.Builder(getContext());
+
+        inflater = getActivity().getLayoutInflater();
+        final View dialogView = inflater.inflate(R.layout.dialog_compra, null);
+        dialogDepositoBuilder.setView(dialogView);
+        dialogDepositoBuilder.setTitle("COMPRAS" + " - "+ operacao);
+
+        dialogDepositoBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+            }
+        })
+                .setNegativeButton("CANCELAR", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
+                        return;
+
+                    }
+                });
+
+        dialog = dialogDepositoBuilder.create();
+        dialog.setIcon(R.drawable.ic_shopping_cart_black_24dp);
+        dialog.show();
+
+    }
+
 
 }

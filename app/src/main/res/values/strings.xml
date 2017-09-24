@@ -14,4 +14,6 @@
     <string name="depositos">Depósitos</string>
     <string name="compras">Compras</string>
     <string name="saques">Saques</string>
+    <string name="senha">Senha</string>
+    <string name="login">Login</string>
 </resources>
