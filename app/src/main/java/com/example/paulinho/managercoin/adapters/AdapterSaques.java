@@ -1,4 +1,4 @@
-package com.example.paulinho.managercoin.Adapters;
+package com.example.paulinho.managercoin.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -13,20 +13,19 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.com.managercoin.dominio.EntidadeDominio;
 import br.com.managercoin.dominio.Saque;
-
-import static com.example.paulinho.managercoin.R.string.deposito;
 
 /**
  * Created by PauLinHo on 23/09/2017.
  */
 
-public class AdapterSaques extends ArrayAdapter<Saque> {
+public class AdapterSaques extends ArrayAdapter<EntidadeDominio> {
 
     private Context context;
-    private List<Saque> lista;
+    private List<EntidadeDominio> lista;
 
-    public AdapterSaques(Context context, List<Saque> lista){
+    public AdapterSaques(Context context, List<EntidadeDominio> lista){
         super(context, 0, lista);
         this.context = context;
         this.lista = new ArrayList<>();
@@ -37,7 +36,7 @@ public class AdapterSaques extends ArrayAdapter<Saque> {
     public View getView(int position, View convertView, ViewGroup parent) {
 
         Saque saque = new Saque();
-        saque = this.lista.get(position);
+        saque = (Saque) this.lista.get(position);
 
         convertView = LayoutInflater.from(this.context).inflate(R.layout.activity_item_saque, null);
 

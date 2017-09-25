@@ -1,4 +1,4 @@
-package com.example.paulinho.managercoin.Utils;
+package com.example.paulinho.managercoin.utils;
 
 /**
  * Created by PauLinHo on 10/09/2017.
@@ -37,7 +37,7 @@ public class WebServiceUtil {
     private static final String URL_INVESTIDOR_FIND = getUrl() + "investidor/find";
     private static final String URL_INVESTIDOR_FINDALL = getUrl() + "investidor/findAll"; 
     private static final String URL_LOGIN = getUrl() + "investidor/login";
-    private static final String URL_INVESTIDOR_FINDBYLOGIN_AND_EMAIL = getUrl() + "investidor/findByLoginAndSenha";
+    private static final String URL_INVESTIDOR_FINDBYLOGIN_AND_EMAIL = getUrl() + "investidor/findByLoginAndEmail";
 
     private static final String URL_MOEDA_SAVE = getUrl() + "moeda/save";
     private static final String URL_MOEDA_UPDATE = getUrl() + "moeda/update";

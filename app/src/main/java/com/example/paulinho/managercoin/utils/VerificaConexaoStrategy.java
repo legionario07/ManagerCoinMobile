@@ -1,4 +1,4 @@
-package com.example.paulinho.managercoin.Utils;
+package com.example.paulinho.managercoin.utils;
 
 import android.content.Context;
 import android.net.ConnectivityManager;

@@ -1,4 +1,4 @@
-package com.example.paulinho.managercoin.Adapters;
+package com.example.paulinho.managercoin.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -13,18 +13,19 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.com.managercoin.dominio.EntidadeDominio;
 import br.com.managercoin.dominio.Venda;
 
 /**
  * Created by PauLinHo on 23/09/2017.
  */
 
-public class AdapterVendas extends ArrayAdapter<Venda> {
+public class AdapterVendas extends ArrayAdapter<EntidadeDominio> {
 
     private Context context;
-    private List<Venda> lista;
+    private List<EntidadeDominio> lista;
 
-    public AdapterVendas(Context context, List<Venda> lista){
+    public AdapterVendas(Context context, List<EntidadeDominio> lista){
         super(context, 0, lista);
         this.context = context;
         this.lista = new ArrayList<>();
@@ -35,7 +36,7 @@ public class AdapterVendas extends ArrayAdapter<Venda> {
     public View getView(int position, View convertView, ViewGroup parent) {
 
         Venda venda = new Venda();
-        venda = this.lista.get(position);
+        venda = (Venda) this.lista.get(position);
 
         convertView = LayoutInflater.from(this.context).inflate(R.layout.activity_item_venda, null);
 

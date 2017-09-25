@@ -1,4 +1,4 @@
-package com.example.paulinho.managercoin.Telas;
+package com.example.paulinho.managercoin.telas;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -34,7 +34,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
         mPager = (ViewPager) findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
-        mPager.setPageTransformer(true, new ZoomOutPageTransformer());
+        mPager.setPageTransformer(true, new com.example.paulinho.managercoin.telas.ZoomOutPageTransformer());
 
     }
 
@@ -52,7 +52,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
                 case 0: // Fragment # 0 - This will show FirstFragment
                     return new CompraFragment();
                 case 1: // Fragment # 0 - This will show FirstFragment
-                    return new VendaFragment();
+                    return new com.example.paulinho.managercoin.telas.VendaFragment();
                 case 2: // Fragment # 0 - This will show FirstFragment
                     return new DepositoFragment();
                 case 3: // Fragment # 0 - This will show FirstFragment

@@ -1,9 +1,9 @@
-package com.example.paulinho.managercoin.WebService;
+package com.example.paulinho.managercoin.webservice;
 
 import android.util.Log;
 
-import com.example.paulinho.managercoin.Utils.DateDeserializer;
-import com.example.paulinho.managercoin.Utils.WebServiceUtil;
+import com.example.paulinho.managercoin.utils.DateDeserializer;
+import com.example.paulinho.managercoin.utils.WebServiceUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -104,7 +104,7 @@ public class HttpClient {
      * @param id          - um id da entidade a qual se deseja excluir
      * @return - um aviso de exclusão com sucesso ou mensagem de erro
      */
-    public static Boolean delete(String enderecoURL, Integer id) {
+    public static Boolean delete(String enderecoURL, Long id) {
         String output = null;
         Boolean isDelete = false;
 
@@ -247,7 +247,7 @@ public class HttpClient {
      * @param id          - o id da entidade procurada
      * @return - Um String Gson com a entidade encontrada ou NULL
      */
-    public static String find(String enderecoURL, Integer id) {
+    public static String find(String enderecoURL, Long id) {
 
         String output = null;
 

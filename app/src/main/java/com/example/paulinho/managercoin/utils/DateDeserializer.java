@@ -1,6 +1,6 @@
-package com.example.paulinho.managercoin.Utils;
+package com.example.paulinho.managercoin.utils;
 
-import com.example.paulinho.managercoin.WebService.GsonUtil;
+import com.example.paulinho.managercoin.webservice.GsonUtil;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;

@@ -1,4 +1,4 @@
-package com.example.paulinho.managercoin.Telas;
+package com.example.paulinho.managercoin.telas;
 
 import android.support.v4.view.ViewPager;
 import android.view.View;

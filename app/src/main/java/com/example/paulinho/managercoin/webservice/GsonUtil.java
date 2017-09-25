@@ -1,4 +1,4 @@
-package com.example.paulinho.managercoin.WebService;
+package com.example.paulinho.managercoin.webservice;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
