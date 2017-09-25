@@ -18,9 +18,10 @@ import android.widget.Toast;
 
 import com.example.paulinho.managercoin.R;
 import com.example.paulinho.managercoin.adapters.AdapterCompras;
+import com.example.paulinho.managercoin.strategy.DeletarStrategy;
+import com.example.paulinho.managercoin.strategy.IStrategy;
+import com.example.paulinho.managercoin.strategy.SalvarStrategy;
 import com.example.paulinho.managercoin.utils.SessionUtil;
-import com.example.paulinho.managercoin.utils.WebServiceUtil;
-import com.example.paulinho.managercoin.webservice.HttpClient;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -32,8 +33,6 @@ import java.util.List;
 import br.com.managercoin.dominio.Compra;
 import br.com.managercoin.dominio.EntidadeDominio;
 import br.com.managercoin.dominio.Moeda;
-
-import static com.example.paulinho.managercoin.webservice.HttpClient.save;
 
 
 public class CompraFragment extends Fragment {
@@ -55,6 +54,7 @@ public class CompraFragment extends Fragment {
     private List<EntidadeDominio> compras = new ArrayList<>();
 
     private Compra compra;
+    private IStrategy iStrategy;
 
     public CompraFragment() {
         // Required empty public constructor
@@ -153,9 +153,7 @@ public class CompraFragment extends Fragment {
         View.OnClickListener criarDialog = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (imgButtonEditCrud.getId() == view.getId()) {
-                    criarDialogCompra("Editar");
-                } else if (imgButtonNewCrud.getId() == view.getId()) {
+                if (imgButtonNewCrud.getId() == view.getId()) {
                     criarDialogCompra("Cadastrar");
                 } else {
                     criarDialogCompra("Deletar");
@@ -164,11 +162,11 @@ public class CompraFragment extends Fragment {
 
         };
 
-        imgButtonEditCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonEditCrud);
+        //imgButtonEditCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonEditCrud);
         imgButtonNewCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonNewCrud);
         imgButtonDeleteCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonDeleteCrud);
 
-        imgButtonEditCrud.setOnClickListener(criarDialog);
+        //imgButtonEditCrud.setOnClickListener(criarDialog);
         imgButtonNewCrud.setOnClickListener(criarDialog);
         imgButtonDeleteCrud.setOnClickListener(criarDialog);
 
@@ -210,6 +208,7 @@ public class CompraFragment extends Fragment {
         adapterMoedas.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnMoeda.setAdapter(adapterMoedas);
 
+        //Se for excluir preenche  o Dialog
         if (!operacao.equals("Cadastrar")) {
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
             data.setText(sdf.format(compra.getData()));
@@ -246,22 +245,16 @@ public class CompraFragment extends Fragment {
                     compra.setMoeda((Moeda) spnMoeda.getSelectedItem());
                     compra.getMoeda().setTaxa(new BigDecimal(taxa.getText().toString()));
 
-                    if (cadastrar(compra) > 0) {
+                    if (salvar(compra) > 0) {
                         Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
-                    }
-                } else if (operacao.equals("Editar")) {
-                    if (editar()) {
-                        Toast.makeText(getContext(), "Editado com Sucesso", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(getContext(), "Não foi Possível Editar", Toast.LENGTH_LONG).show();
                     }
                 } else if (operacao.equals("Deletar")) {
                     if (deletar()) {
                         Toast.makeText(getContext(), "Deletado com Sucesso", Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(getContext(), "Não foi Possível Deletado", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Não foi Possível Deletar", Toast.LENGTH_LONG).show();
                     }
                 }
 
@@ -286,6 +279,11 @@ public class CompraFragment extends Fragment {
 
     }
 
+    /**
+     * Chama o strategy para deletar
+     *
+     * @return true se nao houve erro
+     */
     private boolean deletar() {
 
         dialogProgress = new ProgressDialog(getContext());
@@ -294,14 +292,11 @@ public class CompraFragment extends Fragment {
         dialogProgress.show();
 
         try {
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
 
-                    HttpClient.delete(WebServiceUtil.getUrlCompraDelete(), compra.getId());
-                    SessionUtil.getInstance().setMoedas(HttpClient.findAll(WebServiceUtil.getUrlCompraFindall()));
-                }
-            });
+            iStrategy = new DeletarStrategy();
+            iStrategy.executar(compra);
+
+
         } catch (Exception e) {
             return false;
         } finally {
@@ -310,7 +305,38 @@ public class CompraFragment extends Fragment {
         return true;
     }
 
-    private boolean editar() {
+//    private boolean editar() {
+//
+//        dialogProgress = new ProgressDialog(getContext());
+//        dialogProgress.setMessage("Processando...");
+//        dialogProgress.setTitle("ManagerCoin");
+//        dialogProgress.show();
+//
+//        try {
+//
+//            Thread t = new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//
+//                    HttpClient.update(WebServiceUtil.getUrlCompraUpdate(), compra);
+//                    SessionUtil.getInstance().setMoedas(HttpClient.findAll(WebServiceUtil.getUrlCompraFindall()));
+//                }
+//            });
+//        } catch (Exception e) {
+//            return false;
+//        } finally {
+//            dialogProgress.dismiss();
+//        }
+//        return true;
+//    }
+
+    /**
+     * Chama o strategy para Salvar
+     *
+     * @param compra
+     * @return um long > 1 se tudo ocorreu bem
+     */
+    private Long salvar(final Compra compra) {
 
         dialogProgress = new ProgressDialog(getContext());
         dialogProgress.setMessage("Processando...");
@@ -319,39 +345,8 @@ public class CompraFragment extends Fragment {
 
         try {
 
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-
-                    HttpClient.update(WebServiceUtil.getUrlCompraUpdate(), compra);
-                    SessionUtil.getInstance().setMoedas(HttpClient.findAll(WebServiceUtil.getUrlCompraFindall()));
-                }
-            });
-        } catch (Exception e) {
-            return false;
-        } finally {
-            dialogProgress.dismiss();
-        }
-        return true;
-    }
-
-    private Long cadastrar(final Compra compra) {
-
-        dialogProgress = new ProgressDialog(getContext());
-        dialogProgress.setMessage("Processando...");
-        dialogProgress.setTitle("ManagerCoin");
-        dialogProgress.show();
-
-        try {
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-
-                    compra.setId(save(WebServiceUtil.getUrlCompraSave(), compra));
-                    SessionUtil.getInstance().setMoedas(HttpClient.findAll(WebServiceUtil.getUrlCompraFindall()));
-                }
-            });
-
+            iStrategy = new SalvarStrategy();
+            iStrategy.executar(compra);
 
         } catch (Exception e) {
             return 0l;

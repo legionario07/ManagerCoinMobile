@@ -18,9 +18,10 @@ import android.widget.Toast;
 
 import com.example.paulinho.managercoin.R;
 import com.example.paulinho.managercoin.adapters.AdapterVendas;
+import com.example.paulinho.managercoin.strategy.DeletarStrategy;
+import com.example.paulinho.managercoin.strategy.IStrategy;
+import com.example.paulinho.managercoin.strategy.SalvarStrategy;
 import com.example.paulinho.managercoin.utils.SessionUtil;
-import com.example.paulinho.managercoin.utils.WebServiceUtil;
-import com.example.paulinho.managercoin.webservice.HttpClient;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -33,8 +34,6 @@ import br.com.managercoin.dominio.EntidadeDominio;
 import br.com.managercoin.dominio.Moeda;
 import br.com.managercoin.dominio.Venda;
 
-import static com.example.paulinho.managercoin.webservice.HttpClient.save;
-
 
 public class VendaFragment extends Fragment {
 
@@ -46,7 +45,7 @@ public class VendaFragment extends Fragment {
     private AlertDialog.Builder dialogVendaBuilder;
     private AlertDialog dialog;
 
-    private ImageButton imgButtonEditCrud;
+    //private ImageButton imgButtonEditCrud;
     private ImageButton imgButtonNewCrud;
     private ImageButton imgButtonDeleteCrud;
 
@@ -56,6 +55,8 @@ public class VendaFragment extends Fragment {
     private List<EntidadeDominio> vendas = new ArrayList<>();
 
     private Venda venda;
+
+    private IStrategy iStrategy;
 
     public VendaFragment() {
         // Required empty public constructor
@@ -147,9 +148,7 @@ public class VendaFragment extends Fragment {
         View.OnClickListener criarDialog = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (imgButtonEditCrud.getId() == view.getId()) {
-                    criarDialogVenda("Editar");
-                } else if (imgButtonNewCrud.getId() == view.getId()) {
+                if (imgButtonNewCrud.getId() == view.getId()) {
                     criarDialogVenda("Novo");
                 } else {
                     criarDialogVenda("Deletar");
@@ -158,11 +157,11 @@ public class VendaFragment extends Fragment {
 
         };
 
-        imgButtonEditCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonEditCrud);
+        //imgButtonEditCrud = (ImageButton) dialogView.findViewById(imgButtonEditCrud);
         imgButtonNewCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonNewCrud);
         imgButtonDeleteCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonDeleteCrud);
 
-        imgButtonEditCrud.setOnClickListener(criarDialog);
+        //imgButtonEditCrud.setOnClickListener(criarDialog);
         imgButtonNewCrud.setOnClickListener(criarDialog);
         imgButtonDeleteCrud.setOnClickListener(criarDialog);
 
@@ -204,6 +203,7 @@ public class VendaFragment extends Fragment {
         adapterMoedas.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnMoeda.setAdapter(adapterMoedas);
 
+        //se for diferente de Cadastrar preenche os dados na view
         if (!operacao.equals("Cadastrar")) {
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
             data.setText(sdf.format(venda.getData()));
@@ -239,16 +239,10 @@ public class VendaFragment extends Fragment {
                     venda.setMoeda((Moeda) spnMoeda.getSelectedItem());
                     venda.getMoeda().setTaxa(new BigDecimal(taxa.getText().toString()));
 
-                    if (cadastrar(venda) > 0) {
+                    if (salvar(venda) > 0) {
                         Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
-                    }
-                } else if (operacao.equals("Editar")) {
-                    if (editar()) {
-                        Toast.makeText(getContext(), "Editado com Sucesso", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(getContext(), "Não foi Possível Editar", Toast.LENGTH_LONG).show();
                     }
                 } else if (operacao.equals("Deletar")) {
                     if (deletar()) {
@@ -261,7 +255,7 @@ public class VendaFragment extends Fragment {
                 vendas = SessionUtil.getInstance().getVendas();
                 AdapterVendas adapterVendas = new AdapterVendas(getActivity().getApplicationContext(), vendas);
                 lstVendas.setAdapter(adapterVendas);
-                
+
             }
         })
                 .setNegativeButton("CANCELAR", new DialogInterface.OnClickListener() {
@@ -279,6 +273,11 @@ public class VendaFragment extends Fragment {
 
     }
 
+    /**
+     * chama o strategy para deletar
+     *
+     * @return return true se tudo deu certo
+     */
     private boolean deletar() {
 
         dialogProgress = new ProgressDialog(getContext());
@@ -287,14 +286,8 @@ public class VendaFragment extends Fragment {
         dialogProgress.show();
 
         try {
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-
-                    HttpClient.delete(WebServiceUtil.getUrlVendaDelete(), venda.getId());
-                    SessionUtil.getInstance().setMoedas(HttpClient.findAll(WebServiceUtil.getUrlVendaFindall()));
-                }
-            });
+            iStrategy = new DeletarStrategy();
+            iStrategy.executar(venda);
         } catch (Exception e) {
             return false;
         } finally {
@@ -303,32 +296,13 @@ public class VendaFragment extends Fragment {
         return true;
     }
 
-    private boolean editar() {
 
-        dialogProgress = new ProgressDialog(getContext());
-        dialogProgress.setMessage("Processando...");
-        dialogProgress.setTitle("ManagerCoin");
-        dialogProgress.show();
-
-        try {
-
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-
-                    HttpClient.update(WebServiceUtil.getUrlVendaUpdate(), venda);
-                    SessionUtil.getInstance().setMoedas(HttpClient.findAll(WebServiceUtil.getUrlVendaFindall()));
-                }
-            });
-        } catch (Exception e) {
-            return false;
-        } finally {
-            dialogProgress.dismiss();
-        }
-        return true;
-    }
-
-    private Long cadastrar(final Venda venda) {
+    /**
+     * chama o strategy para deletar
+     *
+     * @return return true se tudo deu certo
+     */
+    private Long salvar(final Venda venda) {
         dialogProgress.setTitle("ManagerCoin");
 
         dialogProgress = new ProgressDialog(getContext());
@@ -336,15 +310,9 @@ public class VendaFragment extends Fragment {
         dialogProgress.show();
 
         try {
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
 
-                    venda.setId(save(WebServiceUtil.getUrlVendaSave(), venda));
-                    SessionUtil.getInstance().setMoedas(HttpClient.findAll(WebServiceUtil.getUrlVendaFindall()));
-                }
-            });
-
+            iStrategy = new SalvarStrategy();
+            iStrategy.executar(venda);
 
         } catch (Exception e) {
             return 0l;

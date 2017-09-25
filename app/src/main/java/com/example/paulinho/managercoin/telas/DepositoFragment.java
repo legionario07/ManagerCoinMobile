@@ -18,9 +18,10 @@ import android.widget.Toast;
 
 import com.example.paulinho.managercoin.R;
 import com.example.paulinho.managercoin.adapters.AdapterDepositos;
+import com.example.paulinho.managercoin.strategy.DeletarStrategy;
+import com.example.paulinho.managercoin.strategy.IStrategy;
+import com.example.paulinho.managercoin.strategy.SalvarStrategy;
 import com.example.paulinho.managercoin.utils.SessionUtil;
-import com.example.paulinho.managercoin.utils.WebServiceUtil;
-import com.example.paulinho.managercoin.webservice.HttpClient;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -32,8 +33,6 @@ import java.util.List;
 import br.com.managercoin.dominio.Deposito;
 import br.com.managercoin.dominio.EntidadeDominio;
 import br.com.managercoin.dominio.Moeda;
-
-import static com.example.paulinho.managercoin.webservice.HttpClient.save;
 
 
 public class DepositoFragment extends Fragment {
@@ -47,13 +46,15 @@ public class DepositoFragment extends Fragment {
     private AlertDialog dialog;
     private ProgressDialog dialogProgress;
 
-    private ImageButton imgButtonEditCrud;
+    //private ImageButton imgButtonEditCrud;
     private ImageButton imgButtonNewCrud;
     private ImageButton imgButtonDeleteCrud;
 
     private Deposito deposito;
     private List<EntidadeDominio> depositos = new ArrayList<>();
     private List<EntidadeDominio> lista = new ArrayList<>();
+
+    private IStrategy iStrategy;
 
     public DepositoFragment() {
         // Required empty public constructor
@@ -146,9 +147,7 @@ public class DepositoFragment extends Fragment {
         View.OnClickListener criarDialog = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (imgButtonEditCrud.getId() == view.getId()) {
-                    criarDialogDeposito("Editar");
-                } else if (imgButtonNewCrud.getId() == view.getId()) {
+                if (imgButtonNewCrud.getId() == view.getId()) {
                     criarDialogDeposito("Cadastrar");
                 } else {
                     criarDialogDeposito("Deletar");
@@ -157,11 +156,11 @@ public class DepositoFragment extends Fragment {
 
         };
 
-        imgButtonEditCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonEditCrud);
+        //imgButtonEditCrud = (ImageButton) dialogView.findViewById(imgButtonEditCrud);
         imgButtonNewCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonNewCrud);
         imgButtonDeleteCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonDeleteCrud);
 
-        imgButtonEditCrud.setOnClickListener(criarDialog);
+        //imgButtonEditCrud.setOnClickListener(criarDialog);
         imgButtonNewCrud.setOnClickListener(criarDialog);
         imgButtonDeleteCrud.setOnClickListener(criarDialog);
 
@@ -202,6 +201,7 @@ public class DepositoFragment extends Fragment {
         adapterMoedas.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnMoeda.setAdapter(adapterMoedas);
 
+        //Se nao for cadastrar preenche os dados no dialog
         if (!operacao.equals("Cadastrar")) {
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
             data.setText(sdf.format(deposito.getData()));
@@ -239,24 +239,18 @@ public class DepositoFragment extends Fragment {
                     deposito.setValorAplicado(new BigDecimal(valorAplicado.getText().toString()));
                     deposito.setMoeda((Moeda) spnMoeda.getSelectedItem());
 
-                    if (cadastrar(deposito) > 0) {
+                    if (salvar(deposito) > 0) {
                         Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
 
 
                     } else {
                         Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
                     }
-                } else if (operacao.equals("Editar")) {
-                    if (editar()) {
-                        Toast.makeText(getContext(), "Editado com Sucesso", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(getContext(), "Não foi Possível Editar", Toast.LENGTH_LONG).show();
-                    }
                 } else if (operacao.equals("Deletar")) {
                     if (deletar()) {
                         Toast.makeText(getContext(), "Deletado com Sucesso", Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(getContext(), "Não foi Possível Deletado", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Não foi Possível Deletar", Toast.LENGTH_LONG).show();
                     }
                 }
 
@@ -281,6 +275,11 @@ public class DepositoFragment extends Fragment {
 
     }
 
+    /**
+     * chama o stragegy para deletar
+     *
+     * @return return true se tudo deu certo
+     */
     private boolean deletar() {
 
         dialogProgress = new ProgressDialog(getContext());
@@ -289,14 +288,9 @@ public class DepositoFragment extends Fragment {
         dialogProgress.show();
 
         try {
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
+            iStrategy = new DeletarStrategy();
+            iStrategy.executar(deposito);
 
-                    HttpClient.delete(WebServiceUtil.getUrlDepositoDelete(), deposito.getId());
-                    SessionUtil.getInstance().setMoedas(HttpClient.findAll(WebServiceUtil.getUrlDepositoFindall()));
-                }
-            });
         } catch (Exception e) {
             return false;
         } finally {
@@ -305,7 +299,12 @@ public class DepositoFragment extends Fragment {
         return true;
     }
 
-    private boolean editar() {
+    /**
+     * Chama o Strategy para salvar
+     * @param deposito com os dados
+     * @return Maior que 1 se tudo deu certo
+     */
+    private Long salvar(final Deposito deposito) {
 
         dialogProgress = new ProgressDialog(getContext());
         dialogProgress.setMessage("Processando...");
@@ -314,38 +313,8 @@ public class DepositoFragment extends Fragment {
 
         try {
 
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-
-                    HttpClient.update(WebServiceUtil.getUrlDepositoUpdate(), deposito);
-                    SessionUtil.getInstance().setMoedas(HttpClient.findAll(WebServiceUtil.getUrlDepositoFindall()));
-                }
-            });
-        } catch (Exception e) {
-            return false;
-        } finally {
-            dialogProgress.dismiss();
-        }
-        return true;
-    }
-
-    private Long cadastrar(final Deposito deposito) {
-
-        dialogProgress = new ProgressDialog(getContext());
-        dialogProgress.setMessage("Processando...");
-        dialogProgress.setTitle("ManagerCoin");
-        dialogProgress.show();
-
-        try {
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-
-                    deposito.setId(save(WebServiceUtil.getUrlDepositoSave(), deposito));
-                    SessionUtil.getInstance().setMoedas(HttpClient.findAll(WebServiceUtil.getUrlDepositoFindall()));
-                }
-            });
+            iStrategy = new SalvarStrategy();
+            iStrategy.executar(deposito);
 
 
         } catch (Exception e) {
