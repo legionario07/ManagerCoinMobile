@@ -46,14 +46,16 @@ public class AdapterCompras extends ArrayAdapter<EntidadeDominio> {
         TextView txtCompraTaxa = (TextView) convertView.findViewById(R.id.txtCompraTaxa);
         TextView txtCompraTotal = (TextView) convertView.findViewById(R.id.txtCompraTotal);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        String data = sdf.format(compra.getData());
+        if(lista.size()>0) {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            String data = sdf.format(compra.getData());
 
-        txtCompraData.setText(data);
-        txtCompraMoeda.setText(compra.getMoeda().getSigla());
-        txtCompraQTDE.setText(compra.getValorAplicado().toString());
-        txtCompraTaxa.setText(compra.getMoeda().getTaxa().toString());
-        txtCompraTotal.setText(compra.getMoeda().getTotal().toString());
+            txtCompraData.setText(data);
+            txtCompraMoeda.setText(compra.getMoeda().getSigla());
+            txtCompraQTDE.setText(compra.getValorAplicado().toString());
+            txtCompraTaxa.setText(compra.getMoeda().getTaxa().toString());
+            txtCompraTotal.setText(compra.getMoeda().getTotal().toString());
+        }
 
         return convertView;
     }

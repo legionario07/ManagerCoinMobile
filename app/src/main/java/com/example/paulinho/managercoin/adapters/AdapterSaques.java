@@ -25,7 +25,7 @@ public class AdapterSaques extends ArrayAdapter<EntidadeDominio> {
     private Context context;
     private List<EntidadeDominio> lista;
 
-    public AdapterSaques(Context context, List<EntidadeDominio> lista){
+    public AdapterSaques(Context context, List<EntidadeDominio> lista) {
         super(context, 0, lista);
         this.context = context;
         this.lista = new ArrayList<>();
@@ -46,16 +46,18 @@ public class AdapterSaques extends ArrayAdapter<EntidadeDominio> {
         TextView txtSaqueComissao = (TextView) convertView.findViewById(R.id.txtSaqueComissao);
         TextView txtSaqueTotal = (TextView) convertView.findViewById(R.id.txtSaqueTotal);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        String data = sdf.format(saque.getData());
+        if (lista.size() > 0) {
 
-        txtSaqueData.setText(data);
-        txtSaqueMoeda.setText(saque.getMoeda().getSigla());
-        txtSaqueQTDE.setText(saque.getValorAplicado().toString());
-        txtSaqueComissao.setText(saque.getComissao().toString());
-        txtSaqueTotal.setText(saque.getTotalLiquido().toString());
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            String data = sdf.format(saque.getData());
 
+            txtSaqueData.setText(data);
+            txtSaqueMoeda.setText(saque.getMoeda().getSigla());
+            txtSaqueQTDE.setText(saque.getValorAplicado().toString());
+            txtSaqueComissao.setText(saque.getComissao().toString());
+            txtSaqueTotal.setText(saque.getTotalLiquido().toString());
 
+        }
         return convertView;
     }
 

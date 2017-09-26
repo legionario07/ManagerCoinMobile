@@ -27,7 +27,6 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import br.com.managercoin.dominio.EntidadeDominio;
@@ -94,31 +93,35 @@ public class SaqueFragment extends Fragment {
         adapterClassif.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnClassificacaoSaque.setAdapter(adapterClassif);
 
-        lista = new ArrayList<>();
+//        lista = new ArrayList<>();
+//
+//        Saque saque = new Saque();
+//
+//        saque.setData(new Date());
+//
+//        Moeda moeda = new Moeda();
+//        moeda.setSigla("BTC");
+//        moeda.setTaxa(new BigDecimal("102.00"));
+//
+//        saque.setTotaLiquido(new BigDecimal("100.00"));
+//        saque.setValorAplicado(new BigDecimal("200.00"));
+//        saque.setComissao(new BigDecimal("0.21"));
+//        saque.setMoeda(moeda);
+//
+//        for (int i = 0; i < 7; i++) {
+//            lista.add(saque);
+//        }
+//
+//        AdapterSaques adapterSaques = new AdapterSaques(getActivity().getApplicationContext(), lista);
+//        lstSaques.setAdapter(adapterSaques);
 
-        Saque saque = new Saque();
-
-        saque.setData(new Date());
-
-        Moeda moeda = new Moeda();
-        moeda.setSigla("BTC");
-        moeda.setTaxa(new BigDecimal("102.00"));
-
-        saque.setTotaLiquido(new BigDecimal("100.00"));
-        saque.setValorAplicado(new BigDecimal("200.00"));
-        saque.setComissao(new BigDecimal("0.21"));
-        saque.setMoeda(moeda);
-
-        for (int i = 0; i < 7; i++) {
-            lista.add(saque);
-        }
-
-        AdapterSaques adapterSaques = new AdapterSaques(getActivity().getApplicationContext(), lista);
+        saques = SessionUtil.getInstance().getSaques();
+        AdapterSaques adapterSaques = new AdapterSaques(getActivity().getApplicationContext(), saques);
         lstSaques.setAdapter(adapterSaques);
 
-        //        saques = SessionUtil.getInstance().getSaques();
-//        AdapterSaques adapterSaques = new AdapterSaques(getActivity().getApplicationContext(), saques);
-//        lstSaques.setAdapter(adapterSaques);
+        if(saques.size()<1){
+            showDialog();
+        }
 
         lstSaques.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -299,6 +302,7 @@ public class SaqueFragment extends Fragment {
 
     /**
      * Chama o Strategy para salvar
+     *
      * @param saque com os dados
      * @return Maior que 1 se tudo deu certo
      */

@@ -27,7 +27,6 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import br.com.managercoin.dominio.Deposito;
@@ -92,31 +91,35 @@ public class DepositoFragment extends Fragment {
         adapterClassif.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnClassificacaoDeposito.setAdapter(adapterClassif);
 
-        lista = new ArrayList<>();
+//        lista = new ArrayList<>();
+//
+//        Deposito deposito = new Deposito();
+//
+//        deposito.setData(new Date());
+//
+//        Moeda moeda = new Moeda();
+//        moeda.setSigla("BTC");
+//        moeda.setTaxa(new BigDecimal("102.00"));
+//
+//        deposito.setTotaLiquido(new BigDecimal("100.00"));
+//        deposito.setValorAplicado(new BigDecimal("200.00"));
+//        deposito.setComissao(new BigDecimal("0.21"));
+//        deposito.setMoeda(moeda);
+//
+//        for (int i = 0; i < 7; i++) {
+//            lista.add(deposito);
+//        }
 
-        Deposito deposito = new Deposito();
+//        AdapterDepositos adapterDepositos = new AdapterDepositos(getActivity().getApplicationContext(), lista);
+//        lstDepositos.setAdapter(adapterDepositos);
 
-        deposito.setData(new Date());
-
-        Moeda moeda = new Moeda();
-        moeda.setSigla("BTC");
-        moeda.setTaxa(new BigDecimal("102.00"));
-
-        deposito.setTotaLiquido(new BigDecimal("100.00"));
-        deposito.setValorAplicado(new BigDecimal("200.00"));
-        deposito.setComissao(new BigDecimal("0.21"));
-        deposito.setMoeda(moeda);
-
-        for (int i = 0; i < 7; i++) {
-            lista.add(deposito);
-        }
-
-        AdapterDepositos adapterDepositos = new AdapterDepositos(getActivity().getApplicationContext(), lista);
+        depositos = SessionUtil.getInstance().getDepositos();
+        AdapterDepositos adapterDepositos = new AdapterDepositos(getActivity().getApplicationContext(), depositos);
         lstDepositos.setAdapter(adapterDepositos);
 
-//        depositos = SessionUtil.getInstance().getDepositos();
-//        AdapterDepositos adapterDepositos = new AdapterDepositos(getActivity().getApplicationContext(), depositos);
-//        lstDepositos.setAdapter(adapterDepositos);
+        if(depositos.size()<1){
+            showDialog();
+        }
 
         lstDepositos.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override

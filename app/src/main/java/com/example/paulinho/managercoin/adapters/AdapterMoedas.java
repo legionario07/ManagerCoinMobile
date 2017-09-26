@@ -24,7 +24,7 @@ public class AdapterMoedas extends ArrayAdapter<EntidadeDominio> {
     private Context context;
     private List<EntidadeDominio> lista;
 
-    public AdapterMoedas(Context context, List<EntidadeDominio> lista){
+    public AdapterMoedas(Context context, List<EntidadeDominio> lista) {
         super(context, 0, lista);
         this.context = context;
         this.lista = new ArrayList<>();
@@ -44,9 +44,12 @@ public class AdapterMoedas extends ArrayAdapter<EntidadeDominio> {
         TextView txtMoedaSigla = (TextView) convertView.findViewById(R.id.txtMoedaSigla);
         TextView txtMoedaTotal = (TextView) convertView.findViewById(R.id.txtMoedaTotal);
 
-        txtMoedaNome.setText(moeda.getNome());
-        txtMoedaSigla.setText(moeda.getSigla());
-        txtMoedaTotal.setText(moeda.getTotal().toString());
+        if (lista.size() > 0) {
+
+            txtMoedaNome.setText(moeda.getNome());
+            txtMoedaSigla.setText(moeda.getSigla());
+            txtMoedaTotal.setText(moeda.getTotal().toString());
+        }
 
         return convertView;
     }

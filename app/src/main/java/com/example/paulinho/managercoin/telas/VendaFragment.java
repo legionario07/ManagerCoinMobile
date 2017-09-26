@@ -27,7 +27,6 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import br.com.managercoin.dominio.EntidadeDominio;
@@ -94,30 +93,34 @@ public class VendaFragment extends Fragment {
         adapterClassif.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnClassificacaoVenda.setAdapter(adapterClassif);
 
-        lista = new ArrayList<>();
+//        lista = new ArrayList<>();
+//
+//        Venda venda = new Venda();
+//
+//        venda.setData(new Date());
+//
+//        Moeda moeda = new Moeda();
+//        moeda.setSigla("BTC");
+//        moeda.setTaxa(new BigDecimal("102.00"));
+//
+//        venda.setTotaLiquido(new BigDecimal("100.00"));
+//        venda.setValorAplicado(new BigDecimal("200.00"));
+//        venda.setMoeda(moeda);
+//
+//        for (int i = 0; i < 7; i++) {
+//            lista.add(venda);
+//        }
+//
+//        AdapterVendas adapterVendas = new AdapterVendas(getActivity().getApplicationContext(), lista);
+//        lstVendas.setAdapter(adapterVendas);
 
-        Venda venda = new Venda();
-
-        venda.setData(new Date());
-
-        Moeda moeda = new Moeda();
-        moeda.setSigla("BTC");
-        moeda.setTaxa(new BigDecimal("102.00"));
-
-        venda.setTotaLiquido(new BigDecimal("100.00"));
-        venda.setValorAplicado(new BigDecimal("200.00"));
-        venda.setMoeda(moeda);
-
-        for (int i = 0; i < 7; i++) {
-            lista.add(venda);
-        }
-
-        AdapterVendas adapterVendas = new AdapterVendas(getActivity().getApplicationContext(), lista);
+        vendas = SessionUtil.getInstance().getVendas();
+        AdapterVendas adapterVendas = new AdapterVendas(getActivity().getApplicationContext(), vendas);
         lstVendas.setAdapter(adapterVendas);
 
-        //        vendas = SessionUtil.getInstance().getVendas();
-//        AdapterVendas adapterVendas = new AdapterVendas(getActivity().getApplicationContext(), vendas);
-//        lstVendas.setAdapter(adapterVendas);
+        if (vendas.size() < 1) {
+            showDialog();
+        }
 
         lstVendas.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override

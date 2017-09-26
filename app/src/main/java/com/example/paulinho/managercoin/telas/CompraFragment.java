@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +28,6 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import br.com.managercoin.dominio.Compra;
@@ -41,10 +41,11 @@ public class CompraFragment extends Fragment {
     private Spinner spnClassificacaoCompra;
     private LayoutInflater inflater;
 
+    private  AdapterCompras adapterCompras;
+
     private AlertDialog.Builder dialogCompraBuilder;
     private AlertDialog dialog;
 
-    private ImageButton imgButtonEditCrud;
     private ImageButton imgButtonNewCrud;
     private ImageButton imgButtonDeleteCrud;
 
@@ -94,31 +95,36 @@ public class CompraFragment extends Fragment {
         spnClassificacaoCompra.setAdapter(adapterClassif);
 
         moedas = SessionUtil.getInstance().getMoedas();
+//
+//        lista = new ArrayList<>();
+//
+//        compra = new Compra();
+//
+//        compra.setData(new Date());
+//
+//        Moeda moeda = new Moeda();
+//        moeda.setSigla("BTC");
+//        moeda.setTaxa(new BigDecimal("102.00"));
+//
+//        compra.setTotaLiquido(new BigDecimal("100.00"));
+//        compra.setValorAplicado(new BigDecimal("200.00"));
+//        compra.setMoeda(moeda);
+//
+//        for (int i = 0; i < 7; i++) {
+//            lista.add(compra);
+//        }
 
-        lista = new ArrayList<>();
+//        AdapterCompras adapterCompras = new AdapterCompras(getActivity().getApplicationContext(), lista);
+//        lstCompras.setAdapter(adapterCompras);
 
-        compra = new Compra();
-
-        compra.setData(new Date());
-
-        Moeda moeda = new Moeda();
-        moeda.setSigla("BTC");
-        moeda.setTaxa(new BigDecimal("102.00"));
-
-        compra.setTotaLiquido(new BigDecimal("100.00"));
-        compra.setValorAplicado(new BigDecimal("200.00"));
-        compra.setMoeda(moeda);
-
-        for (int i = 0; i < 7; i++) {
-            lista.add(compra);
-        }
-
-        AdapterCompras adapterCompras = new AdapterCompras(getActivity().getApplicationContext(), lista);
+        compras = SessionUtil.getInstance().getCompras();
+        Log.i("TESTE", String.valueOf(Integer.valueOf(compras.size())));
+        adapterCompras = new AdapterCompras(getContext(), compras);
         lstCompras.setAdapter(adapterCompras);
 
-//        compras = SessionUtil.getInstance().getCompras();
-//        AdapterCompras adapterCompras = new AdapterCompras(getActivity().getApplicationContext(), compras);
-//        lstCompras.setAdapter(adapterCompras);
+        if(compras.size()<1){
+            showDialog();
+        }
 
         lstCompras.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -162,11 +168,9 @@ public class CompraFragment extends Fragment {
 
         };
 
-        //imgButtonEditCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonEditCrud);
         imgButtonNewCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonNewCrud);
         imgButtonDeleteCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonDeleteCrud);
 
-        //imgButtonEditCrud.setOnClickListener(criarDialog);
         imgButtonNewCrud.setOnClickListener(criarDialog);
         imgButtonDeleteCrud.setOnClickListener(criarDialog);
 
@@ -204,6 +208,7 @@ public class CompraFragment extends Fragment {
         final EditText taxa = (EditText) dialogView.findViewById(R.id.inpTaxaDialogCompra);
 
         final Spinner spnMoeda = (Spinner) dialogView.findViewById(R.id.spnMoedaDialogCompra);
+        Log.i("TESTE", moedas.get(0).getId().toString());
         ArrayAdapter adapterMoedas = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, moedas);
         adapterMoedas.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnMoeda.setAdapter(adapterMoedas);

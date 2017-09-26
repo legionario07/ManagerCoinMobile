@@ -156,7 +156,11 @@ public class HttpClient {
 
         try {
 
-            Gson gson = new Gson();
+            GsonBuilder gsonBuilder = new GsonBuilder();
+            gsonBuilder.registerTypeAdapter(Date.class, new DateDeserializer(new SimpleDateFormat("dd/MM/yyyy")));
+
+            Gson gson = gsonBuilder.create();
+
             String dadosTemp = gson.toJson(entidadeDominio);
 
             URL url = new URL(enderecoURL);
@@ -229,7 +233,15 @@ public class HttpClient {
                 retorno.append(output);
             }
 
-            gson = new Gson();
+            GsonBuilder gsonBuilder = new GsonBuilder();
+            gsonBuilder.registerTypeAdapter(Date.class, new DateDeserializer(new SimpleDateFormat("dd/MM/yyyy")));
+
+            String[] stringData = retorno.toString().split("\"data\":");
+
+
+            List<EntidadeDominio> listaTemp = new ArrayList<EntidadeDominio>();
+
+            gson = gsonBuilder.create();
 
             lista = gson.fromJson(retorno.toString(), getTipoRetorno(enderecoURL));
 
@@ -250,6 +262,8 @@ public class HttpClient {
     public static String find(String enderecoURL, Long id) {
 
         String output = null;
+
+        Gson gson = null;
 
         StringBuffer temp = new StringBuffer();
         temp.append(enderecoURL);
@@ -276,6 +290,11 @@ public class HttpClient {
                 retorno.append(output);
             }
 
+            GsonBuilder gsonBuilder = new GsonBuilder();
+            gsonBuilder.registerTypeAdapter(Date.class, new DateDeserializer(new SimpleDateFormat("dd/MM/yyyy")));
+
+            gson = gsonBuilder.create();
+
 
             conn.disconnect();
 
@@ -284,7 +303,7 @@ public class HttpClient {
             return null;
         }
 
-        return retorno.toString();
+        return gson.toJson(retorno.toString());
     }
 
 
@@ -440,6 +459,66 @@ public class HttpClient {
         return listaType;
     }
 
+    private String validaData(String dados) {
+        //String dadosSeparados[] = dados.split("\"");
+        //String data = dadosSeparados[3];
+        dados = dados.replace(" ", "/");
+        dados = dados.replace(",", "");
+        dados = dados.replace("\"", "");
+        String dataSeparada[] = dados.split("/");
+        String mes = dataSeparada[0];
+        String dia = dataSeparada[1];
+        String ano = dataSeparada[2];
+
+        switch (mes.toUpperCase()) {
+            case "JAN":
+                mes = "1";
+                break;
+            case "FEB":
+                mes = "2";
+                break;
+            case "MAR":
+                mes = "3";
+                break;
+            case "APR":
+                mes = "4";
+                break;
+            case "MAY":
+                mes = "5";
+                break;
+            case "JUN":
+                mes = "6";
+                break;
+            case "JUL":
+                mes = "7";
+                break;
+            case "AUG":
+                mes = "8";
+                break;
+            case "SEP":
+                mes = "9";
+                break;
+            case "OCT":
+                mes = "10";
+                break;
+            case "NOV":
+                mes = "11";
+                break;
+            case "DEC":
+                mes = "12";
+                break;
+
+        }
+
+        StringBuffer retorno = new StringBuffer();
+        retorno.append(dia);
+        retorno.append("/");
+        retorno.append(mes);
+        retorno.append("/");
+        retorno.append(ano);
+
+        return retorno.toString();
+    }
 
 
 }

@@ -49,12 +49,15 @@ public class AdapterVendas extends ArrayAdapter<EntidadeDominio> {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         String data = sdf.format(venda.getData());
 
-        txtVendaData.setText(data);
-        txtVendaMoeda.setText(venda.getMoeda().getSigla());
-        txtVendaQTDE.setText(venda.getValorAplicado().toString());
-        txtVendaTaxa.setText(venda.getMoeda().getTaxa().toString());
-        txtVendaTotal.setText(venda.getTotalLiquido().toString());
+        if(lista.size()>1) {
 
+            txtVendaData.setText(data);
+            txtVendaMoeda.setText(venda.getMoeda().getSigla());
+            txtVendaQTDE.setText(venda.getValorAplicado().toString());
+            txtVendaTaxa.setText(venda.getMoeda().getTaxa().toString());
+            txtVendaTotal.setText(venda.getTotalLiquido().toString());
+
+        }
 
         return convertView;
     }

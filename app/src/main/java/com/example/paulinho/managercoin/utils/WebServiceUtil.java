@@ -12,7 +12,6 @@ public class WebServiceUtil {
     private static final String URL_USUARIO_FIND = getUrl() + "usuario/find";
     private static final String URL_USUARIO_FINDALL = getUrl() + "usuario/findAll";
 
-
     private static final String URL_DEPOSITO_SAVE = getUrl() + "deposito/save";
     private static final String URL_DEPOSITO_UPDATE = getUrl() + "deposito/update";
     private static final String URL_DEPOSITO_DELETE = getUrl() + "deposito/delete";

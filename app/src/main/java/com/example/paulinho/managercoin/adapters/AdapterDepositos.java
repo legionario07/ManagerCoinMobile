@@ -45,16 +45,17 @@ public class AdapterDepositos extends ArrayAdapter<EntidadeDominio> {
         TextView txtDepositoQTDE = (TextView) convertView.findViewById(R.id.txtDepositoQTDE);
         TextView txtDepositoComissao = (TextView) convertView.findViewById(R.id.txtDepositoComissao);
         TextView txtDepositoTotal = (TextView) convertView.findViewById(R.id.txtDepositoTotal);
+        if(lista.size()>0) {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            String data = sdf.format(deposito.getData());
 
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        String data = sdf.format(deposito.getData());
+            txtDepositoData.setText(data);
+            txtDepositoMoeda.setText(deposito.getMoeda().getSigla());
+            txtDepositoQTDE.setText(deposito.getValorAplicado().toString());
+            txtDepositoComissao.setText(deposito.getComissao().toString());
+            txtDepositoTotal.setText(deposito.getTotalLiquido().toString());
 
-        txtDepositoData.setText(data);
-        txtDepositoMoeda.setText(deposito.getMoeda().getSigla());
-        txtDepositoQTDE.setText(deposito.getValorAplicado().toString());
-        txtDepositoComissao.setText(deposito.getComissao().toString());
-        txtDepositoTotal.setText(deposito.getTotalLiquido().toString());
-
+        }
 
 
         return convertView;
