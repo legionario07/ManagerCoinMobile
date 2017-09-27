@@ -236,11 +236,6 @@ public class HttpClient {
             GsonBuilder gsonBuilder = new GsonBuilder();
             gsonBuilder.registerTypeAdapter(Date.class, new DateDeserializer(new SimpleDateFormat("dd/MM/yyyy")));
 
-            String[] stringData = retorno.toString().split("\"data\":");
-
-
-            List<EntidadeDominio> listaTemp = new ArrayList<EntidadeDominio>();
-
             gson = gsonBuilder.create();
 
             lista = gson.fromJson(retorno.toString(), getTipoRetorno(enderecoURL));
