@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.example.paulinho.managercoin.R;
 import com.example.paulinho.managercoin.adapters.AdapterVendas;
+import com.example.paulinho.managercoin.comparadores.MovimentacaoComparator;
 import com.example.paulinho.managercoin.strategy.DeletarStrategy;
 import com.example.paulinho.managercoin.strategy.IStrategy;
 import com.example.paulinho.managercoin.strategy.SalvarStrategy;
@@ -34,6 +35,8 @@ import java.util.List;
 import br.com.managercoin.dominio.EntidadeDominio;
 import br.com.managercoin.dominio.Moeda;
 import br.com.managercoin.dominio.Venda;
+
+import static com.example.paulinho.managercoin.R.id.spnClassificacaoCompra;
 
 
 public class VendaFragment extends Fragment {
@@ -121,6 +124,19 @@ public class VendaFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 showDialog();
+            }
+        });
+
+        spnClassificacaoVenda.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+
+                vendas = MovimentacaoComparator.ordenar(String.valueOf(spnClassificacaoVenda.getItemIdAtPosition(i)), vendas);
+
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
             }
         });
 

@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.example.paulinho.managercoin.R;
 import com.example.paulinho.managercoin.adapters.AdapterSaques;
+import com.example.paulinho.managercoin.comparadores.MovimentacaoComparator;
 import com.example.paulinho.managercoin.strategy.DeletarStrategy;
 import com.example.paulinho.managercoin.strategy.IStrategy;
 import com.example.paulinho.managercoin.strategy.SalvarStrategy;
@@ -122,6 +123,19 @@ public class SaqueFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 showDialog();
+            }
+        });
+
+        spnClassificacaoSaque.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+
+                saques = MovimentacaoComparator.ordenar(String.valueOf(spnClassificacaoSaque.getItemIdAtPosition(i)), saques);
+
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
             }
         });
 

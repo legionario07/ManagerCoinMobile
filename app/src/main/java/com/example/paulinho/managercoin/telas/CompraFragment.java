@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.example.paulinho.managercoin.R;
 import com.example.paulinho.managercoin.adapters.AdapterCompras;
+import com.example.paulinho.managercoin.comparadores.MovimentacaoComparator;
 import com.example.paulinho.managercoin.strategy.DeletarStrategy;
 import com.example.paulinho.managercoin.strategy.IStrategy;
 import com.example.paulinho.managercoin.strategy.SalvarStrategy;
@@ -126,6 +127,18 @@ public class CompraFragment extends Fragment {
             }
         });
 
+        spnClassificacaoCompra.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+
+                compras = MovimentacaoComparator.ordenar(String.valueOf(spnClassificacaoCompra.getItemIdAtPosition(i)), compras);
+
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         return rootView;
     }
@@ -254,7 +267,6 @@ public class CompraFragment extends Fragment {
                 }
 
 
-
                 Thread t = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -275,8 +287,6 @@ public class CompraFragment extends Fragment {
                     }
                 });
                 t.start();
-
-
 
 
             }
