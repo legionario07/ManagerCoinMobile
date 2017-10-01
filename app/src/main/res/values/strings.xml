@@ -26,4 +26,8 @@
     <string name="managercoin">ManagerCoin</string>
     <string name="sigla">Sigla:</string>
     <string name="total">Total:</string>
+    <string name="dashboard">DashBoard</string>
+    <string name="senha_atual">Senha Atual</string>
+    <string name="nova_senha">Nova Senha</string>
+    <string name="confirmar_senha">Confirmar Senha</string>
 </resources>

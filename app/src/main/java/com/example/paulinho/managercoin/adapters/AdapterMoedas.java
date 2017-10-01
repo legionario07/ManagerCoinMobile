@@ -44,12 +44,10 @@ public class AdapterMoedas extends ArrayAdapter<EntidadeDominio> {
         TextView txtMoedaSigla = (TextView) convertView.findViewById(R.id.txtMoedaSigla);
         TextView txtMoedaTotal = (TextView) convertView.findViewById(R.id.txtMoedaTotal);
 
-        if (lista.size() > 0) {
 
-            txtMoedaNome.setText(moeda.getNome());
-            txtMoedaSigla.setText(moeda.getSigla());
-            txtMoedaTotal.setText(moeda.getTotal().toString());
-        }
+        txtMoedaNome.setText(moeda.getNome());
+        txtMoedaSigla.setText(moeda.getSigla());
+        txtMoedaTotal.setText(moeda.getTotal().toString());
 
         return convertView;
     }

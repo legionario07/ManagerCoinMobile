@@ -56,6 +56,10 @@ public class WebServiceUtil {
     private static final String URL_VENDA_FIND = getUrl() + "venda/find";
     private static final String URL_VENDA_FINDALL = getUrl() + "venda/findAll";
 
+   private static final String URL_MOVIMENTACOES_SAVE = getUrl() + "movimentacao/save";
+    private static final String URL_MOVIMENTACOES_UPDATE = getUrl() + "movimentacao/update";
+    private static final String URL_MOVIMENTACOES_FINDALL = getUrl() + "movimentacao/findAll";
+
 
     /**
      * Method that returns the beginning of the webservice URL
@@ -236,5 +240,17 @@ public class WebServiceUtil {
 
     public static String getUrlInvestidorFindbyloginAndEmail() {
         return URL_INVESTIDOR_FINDBYLOGIN_AND_EMAIL;
+    }
+
+    public static String getUrlMovimentacoesSave() {
+        return URL_MOVIMENTACOES_SAVE;
+    }
+
+    public static String getUrlMovimentacoesUpdate() {
+        return URL_MOVIMENTACOES_UPDATE;
+    }
+
+    public static String getUrlMovimentacoesFindall() {
+        return URL_MOVIMENTACOES_FINDALL;
     }
 }

@@ -3,6 +3,7 @@ package com.example.paulinho.managercoin.telas;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -22,6 +23,7 @@ import com.example.paulinho.managercoin.strategy.DeletarStrategy;
 import com.example.paulinho.managercoin.strategy.IStrategy;
 import com.example.paulinho.managercoin.strategy.SalvarStrategy;
 import com.example.paulinho.managercoin.utils.SessionUtil;
+import com.example.paulinho.managercoin.utils.TelaHelper;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -38,11 +40,13 @@ public class SaqueFragment extends Fragment {
 
     private ListView lstSaques;
     private Spinner spnClassificacaoSaque;
+    private ImageButton imgAdd;
 
     private LayoutInflater inflater;
 
     private AlertDialog.Builder dialogSaqueBuilder;
     private AlertDialog dialog;
+    private AlertDialog alert;
 
     //private ImageButton imgButtonEditCrud;
     private ImageButton imgButtonNewCrud;
@@ -56,6 +60,7 @@ public class SaqueFragment extends Fragment {
     private Saque saque;
 
     private IStrategy iStrategy;
+    private Handler handler = new Handler();
 
     public SaqueFragment() {
         // Required empty public constructor
@@ -80,6 +85,7 @@ public class SaqueFragment extends Fragment {
                              Bundle savedInstanceState) {
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.activity_saques, container, false);
 
+        imgAdd = (ImageButton) rootView.findViewById(R.id.imgAddSaque);
         lstSaques = (ListView) rootView.findViewById(R.id.lstSaques);
         spnClassificacaoSaque = (Spinner) rootView.findViewById(R.id.spnClassificacaoSaque);
         List<String> classificacao = new ArrayList<>();
@@ -93,43 +99,29 @@ public class SaqueFragment extends Fragment {
         adapterClassif.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnClassificacaoSaque.setAdapter(adapterClassif);
 
-//        lista = new ArrayList<>();
-//
-//        Saque saque = new Saque();
-//
-//        saque.setData(new Date());
-//
-//        Moeda moeda = new Moeda();
-//        moeda.setSigla("BTC");
-//        moeda.setTaxa(new BigDecimal("102.00"));
-//
-//        saque.setTotaLiquido(new BigDecimal("100.00"));
-//        saque.setValorAplicado(new BigDecimal("200.00"));
-//        saque.setComissao(new BigDecimal("0.21"));
-//        saque.setMoeda(moeda);
-//
-//        for (int i = 0; i < 7; i++) {
-//            lista.add(saque);
-//        }
-//
-//        AdapterSaques adapterSaques = new AdapterSaques(getActivity().getApplicationContext(), lista);
-//        lstSaques.setAdapter(adapterSaques);
-
         saques = SessionUtil.getInstance().getSaques();
         AdapterSaques adapterSaques = new AdapterSaques(getActivity().getApplicationContext(), saques);
         lstSaques.setAdapter(adapterSaques);
 
-        if(saques.size()<1){
-            showDialog();
-        }
 
         lstSaques.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
 
+
+                saque = new Saque();
+                saque = (Saque) lstSaques.getItemAtPosition(i);
+                
                 showDialog();
 
                 return true;
+            }
+        });
+
+        imgAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialog();
             }
         });
 
@@ -141,7 +133,6 @@ public class SaqueFragment extends Fragment {
      */
     private void showDialog() {
 
-        AlertDialog alert;
         AlertDialog.Builder dialogCrud = new AlertDialog.Builder(getContext());
 
         inflater = getActivity().getLayoutInflater();
@@ -153,10 +144,12 @@ public class SaqueFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 if (imgButtonNewCrud.getId() == view.getId()) {
-                    criarDialogSaque("Novo");
+                    criarDialogSaque("Cadastrar");
                 } else {
                     criarDialogSaque("Deletar");
                 }
+
+                alert.dismiss();
             }
 
         };
@@ -196,12 +189,15 @@ public class SaqueFragment extends Fragment {
         inflater = getActivity().getLayoutInflater();
         final View dialogView = inflater.inflate(R.layout.dialog_compra, null);
         dialogSaqueBuilder.setView(dialogView);
-        dialogSaqueBuilder.setTitle("COMPRAS" + " - " + operacao);
+        dialogSaqueBuilder.setTitle("SAQUES" + " - " + operacao);
 
         final EditText data = (EditText) dialogView.findViewById(R.id.inpDataDialogSaque);
         final EditText valor = (EditText) dialogView.findViewById(R.id.inpValorDialogSaque);
 
         final Spinner spnMoeda = (Spinner) dialogView.findViewById(R.id.spnMoedaDialogSaque);
+
+        moedas = SessionUtil.getInstance().getMoedas();
+
         ArrayAdapter adapterMoedas = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, moedas);
         adapterMoedas.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnMoeda.setAdapter(adapterMoedas);
@@ -241,7 +237,7 @@ public class SaqueFragment extends Fragment {
                     saque.setValorAplicado(new BigDecimal(valor.getText().toString()));
                     saque.setMoeda((Moeda) spnMoeda.getSelectedItem());
 
-                    if (salvar(saque) > 0) {
+                    if (salvar(saque)) {
                         Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
@@ -254,9 +250,28 @@ public class SaqueFragment extends Fragment {
                     }
                 }
 
-                saques = SessionUtil.getInstance().getSaques();
-                AdapterSaques adapterSaques = new AdapterSaques(getActivity().getApplicationContext(), saques);
-                lstSaques.setAdapter(adapterSaques);
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        TelaHelper.atualizarSession(saque);
+
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                saques = SessionUtil.getInstance().getSaques();
+                                if (saques != null) {
+                                    AdapterSaques adapterSaques = new AdapterSaques(getContext(), saques);
+                                    lstSaques.setAdapter(adapterSaques);
+
+
+                                }
+
+                            }
+                        });
+
+                    }
+                });
+                t.start();
 
             }
         })
@@ -290,14 +305,17 @@ public class SaqueFragment extends Fragment {
         try {
 
             iStrategy = new DeletarStrategy();
-            iStrategy.executar(saque);
+            if(iStrategy.executar(saque)){
+                return true;
+            }else{
+                return false;
+            }
 
         } catch (Exception e) {
             return false;
         } finally {
             dialogProgress.dismiss();
         }
-        return true;
     }
 
     /**
@@ -306,7 +324,7 @@ public class SaqueFragment extends Fragment {
      * @param saque com os dados
      * @return Maior que 1 se tudo deu certo
      */
-    private Long salvar(final Saque saque) {
+    private boolean salvar(final Saque saque) {
         dialogProgress.setTitle("ManagerCoin");
 
         dialogProgress = new ProgressDialog(getContext());
@@ -316,15 +334,18 @@ public class SaqueFragment extends Fragment {
         try {
 
             iStrategy = new SalvarStrategy();
-            iStrategy.executar(saque);
+            if(iStrategy.executar(saque)){
+                return true;
+            }else{
+                return false;
+            }
 
 
         } catch (Exception e) {
-            return 0l;
+            return false;
         } finally {
             dialogProgress.dismiss();
         }
-        return saque.getId();
     }
 
 }

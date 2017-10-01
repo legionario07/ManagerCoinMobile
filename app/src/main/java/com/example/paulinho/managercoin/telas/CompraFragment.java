@@ -3,9 +3,9 @@ package com.example.paulinho.managercoin.telas;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +23,7 @@ import com.example.paulinho.managercoin.strategy.DeletarStrategy;
 import com.example.paulinho.managercoin.strategy.IStrategy;
 import com.example.paulinho.managercoin.strategy.SalvarStrategy;
 import com.example.paulinho.managercoin.utils.SessionUtil;
+import com.example.paulinho.managercoin.utils.TelaHelper;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -40,11 +41,14 @@ public class CompraFragment extends Fragment {
     private ListView lstCompras;
     private Spinner spnClassificacaoCompra;
     private LayoutInflater inflater;
+    private ImageButton imgAdd;
 
-    private  AdapterCompras adapterCompras;
+    private AdapterCompras adapterCompras;
+    private ArrayAdapter adapterMoedas;
 
     private AlertDialog.Builder dialogCompraBuilder;
     private AlertDialog dialog;
+    private AlertDialog alert;
 
     private ImageButton imgButtonNewCrud;
     private ImageButton imgButtonDeleteCrud;
@@ -56,6 +60,7 @@ public class CompraFragment extends Fragment {
 
     private Compra compra;
     private IStrategy iStrategy;
+    private Handler handler = new Handler();
 
     public CompraFragment() {
         // Required empty public constructor
@@ -81,6 +86,7 @@ public class CompraFragment extends Fragment {
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.activity_compras, container, false);
 
 
+        imgAdd = (ImageButton) rootView.findViewById(R.id.imgAddCompra);
         lstCompras = (ListView) rootView.findViewById(R.id.lstCompras);
         spnClassificacaoCompra = (Spinner) rootView.findViewById(R.id.spnClassificacaoCompra);
         List<String> classificacao = new ArrayList<>();
@@ -95,36 +101,10 @@ public class CompraFragment extends Fragment {
         spnClassificacaoCompra.setAdapter(adapterClassif);
 
         moedas = SessionUtil.getInstance().getMoedas();
-//
-//        lista = new ArrayList<>();
-//
-//        compra = new Compra();
-//
-//        compra.setData(new Date());
-//
-//        Moeda moeda = new Moeda();
-//        moeda.setSigla("BTC");
-//        moeda.setTaxa(new BigDecimal("102.00"));
-//
-//        compra.setTotaLiquido(new BigDecimal("100.00"));
-//        compra.setValorAplicado(new BigDecimal("200.00"));
-//        compra.setMoeda(moeda);
-//
-//        for (int i = 0; i < 7; i++) {
-//            lista.add(compra);
-//        }
-
-//        AdapterCompras adapterCompras = new AdapterCompras(getActivity().getApplicationContext(), lista);
-//        lstCompras.setAdapter(adapterCompras);
-
         compras = SessionUtil.getInstance().getCompras();
-        Log.i("TESTE", String.valueOf(Integer.valueOf(compras.size())));
+
         adapterCompras = new AdapterCompras(getContext(), compras);
         lstCompras.setAdapter(adapterCompras);
-
-        if(compras.size()<1){
-            showDialog();
-        }
 
         lstCompras.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -139,6 +119,13 @@ public class CompraFragment extends Fragment {
             }
         });
 
+        imgAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialog();
+            }
+        });
+
 
         return rootView;
     }
@@ -148,7 +135,7 @@ public class CompraFragment extends Fragment {
      */
     private void showDialog() {
 
-        final AlertDialog alert;
+
         final AlertDialog.Builder dialogCrud = new AlertDialog.Builder(getContext());
 
         inflater = getActivity().getLayoutInflater();
@@ -164,6 +151,8 @@ public class CompraFragment extends Fragment {
                 } else {
                     criarDialogCompra("Deletar");
                 }
+
+                alert.dismiss();
             }
 
         };
@@ -208,9 +197,10 @@ public class CompraFragment extends Fragment {
         final EditText taxa = (EditText) dialogView.findViewById(R.id.inpTaxaDialogCompra);
 
         final Spinner spnMoeda = (Spinner) dialogView.findViewById(R.id.spnMoedaDialogCompra);
-        Log.i("TESTE", moedas.get(0).getId().toString());
-        ArrayAdapter adapterMoedas = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, moedas);
+
+        adapterMoedas = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, moedas);
         adapterMoedas.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
         spnMoeda.setAdapter(adapterMoedas);
 
         //Se for excluir preenche  o Dialog
@@ -250,7 +240,7 @@ public class CompraFragment extends Fragment {
                     compra.setMoeda((Moeda) spnMoeda.getSelectedItem());
                     compra.getMoeda().setTaxa(new BigDecimal(taxa.getText().toString()));
 
-                    if (salvar(compra) > 0) {
+                    if (salvar(compra)) {
                         Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
@@ -263,9 +253,31 @@ public class CompraFragment extends Fragment {
                     }
                 }
 
-                compras = SessionUtil.getInstance().getCompras();
-                AdapterCompras adapterCompras = new AdapterCompras(getActivity().getApplicationContext(), compras);
-                lstCompras.setAdapter(adapterCompras);
+
+
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        TelaHelper.atualizarSession(compra);
+
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                compras = SessionUtil.getInstance().getCompras();
+                                if (compras != null) {
+                                    AdapterCompras adapterCompras = new AdapterCompras(getContext(), compras);
+                                    lstCompras.setAdapter(adapterCompras);
+                                }
+
+                            }
+                        });
+
+                    }
+                });
+                t.start();
+
+
+
 
             }
         })
@@ -299,7 +311,11 @@ public class CompraFragment extends Fragment {
         try {
 
             iStrategy = new DeletarStrategy();
-            iStrategy.executar(compra);
+            if (iStrategy.executar(compra)) {
+                return true;
+            } else {
+                return false;
+            }
 
 
         } catch (Exception e) {
@@ -307,7 +323,6 @@ public class CompraFragment extends Fragment {
         } finally {
             dialogProgress.dismiss();
         }
-        return true;
     }
 
 //    private boolean editar() {
@@ -341,7 +356,7 @@ public class CompraFragment extends Fragment {
      * @param compra
      * @return um long > 1 se tudo ocorreu bem
      */
-    private Long salvar(final Compra compra) {
+    private boolean salvar(final Compra compra) {
 
         dialogProgress = new ProgressDialog(getContext());
         dialogProgress.setMessage("Processando...");
@@ -351,14 +366,17 @@ public class CompraFragment extends Fragment {
         try {
 
             iStrategy = new SalvarStrategy();
-            iStrategy.executar(compra);
+            if (iStrategy.executar(compra)) {
+                return true;
+            } else {
+                return false;
+            }
 
         } catch (Exception e) {
-            return 0l;
+            return false;
         } finally {
             dialogProgress.dismiss();
         }
-        return compra.getId();
     }
 
 }

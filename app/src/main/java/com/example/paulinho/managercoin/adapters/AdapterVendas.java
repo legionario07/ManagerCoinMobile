@@ -49,7 +49,7 @@ public class AdapterVendas extends ArrayAdapter<EntidadeDominio> {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         String data = sdf.format(venda.getData());
 
-        if(lista.size()>1) {
+        if(lista.size()>0) {
 
             txtVendaData.setText(data);
             txtVendaMoeda.setText(venda.getMoeda().getSigla());

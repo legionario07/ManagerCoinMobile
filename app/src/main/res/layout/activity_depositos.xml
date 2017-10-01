@@ -20,7 +20,14 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="horizontal"
-        android:layout_weight=".35">
+        android:layout_weight=".45">
+
+        <ImageButton
+            android:id="@+id/imgAddDeposito"
+            android:background="#dcdcdc"
+            android:src="@drawable/ic_add_circle_outline_black_24dp"
+            android:layout_width="50dp"
+            android:layout_height="24dp" />
 
         <TextView
             android:text="Classif.:"

@@ -52,7 +52,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
                 case 0: // Fragment # 0 - This will show FirstFragment
                     return new CompraFragment();
                 case 1: // Fragment # 0 - This will show FirstFragment
-                    return new com.example.paulinho.managercoin.telas.VendaFragment();
+                    return new VendaFragment();
                 case 2: // Fragment # 0 - This will show FirstFragment
                     return new DepositoFragment();
                 case 3: // Fragment # 0 - This will show FirstFragment

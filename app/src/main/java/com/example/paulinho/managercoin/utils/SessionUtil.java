@@ -22,10 +22,11 @@ public class SessionUtil {
     private List<EntidadeDominio> saques;
     private List<EntidadeDominio> despesas;
     private List<EntidadeDominio> vendas;
+    private List<EntidadeDominio> movimentacoes;
 
     private SessionUtil() {
 
-        investidor =  new Investidor();
+        investidor = new Investidor();
         compras = new ArrayList<>();
         moedas = new ArrayList<>();
         depositos = new ArrayList<>();
@@ -33,6 +34,7 @@ public class SessionUtil {
         saques = new ArrayList<>();
         despesas = new ArrayList<>();
         vendas = new ArrayList<>();
+        movimentacoes = new ArrayList<>();
 
     }
 
@@ -42,14 +44,22 @@ public class SessionUtil {
 
 
     public void clear() {
-        investidor = new Investidor();
-        compras.clear();
-        moedas.clear();
-        investidores.clear();
-        depositos.clear();
-        saques.clear();
-        despesas.clear();
-        vendas.clear();
+        if (investidor != null)
+            investidor = new Investidor();
+        if (compras != null)
+            compras.clear();
+        if (moedas != null)
+            moedas.clear();
+        if (investidores != null)
+            investidores.clear();
+        if (depositos != null)
+            depositos.clear();
+        if (saques != null)
+            saques.clear();
+        if (despesas != null)
+            despesas.clear();
+        if (vendas != null)
+            vendas.clear();
     }
 
     public static void setInstance(SessionUtil instance) {
@@ -118,5 +128,13 @@ public class SessionUtil {
 
     public void setVendas(List<EntidadeDominio> vendas) {
         this.vendas = vendas;
+    }
+
+    public List<EntidadeDominio> getMovimentacoes() {
+        return movimentacoes;
+    }
+
+    public void setMovimentacoes(List<EntidadeDominio> movimentacoes) {
+        this.movimentacoes = movimentacoes;
     }
 }

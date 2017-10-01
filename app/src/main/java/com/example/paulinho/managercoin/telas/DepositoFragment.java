@@ -3,6 +3,7 @@ package com.example.paulinho.managercoin.telas;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -22,6 +23,7 @@ import com.example.paulinho.managercoin.strategy.DeletarStrategy;
 import com.example.paulinho.managercoin.strategy.IStrategy;
 import com.example.paulinho.managercoin.strategy.SalvarStrategy;
 import com.example.paulinho.managercoin.utils.SessionUtil;
+import com.example.paulinho.managercoin.utils.TelaHelper;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -38,12 +40,14 @@ public class DepositoFragment extends Fragment {
 
     private ListView lstDepositos;
     private Spinner spnClassificacaoDeposito;
+    private ImageButton imgAdd;
 
     private LayoutInflater inflater;
 
     private AlertDialog.Builder dialogDepositoBuilder;
     private AlertDialog dialog;
     private ProgressDialog dialogProgress;
+    private AlertDialog alert;
 
     //private ImageButton imgButtonEditCrud;
     private ImageButton imgButtonNewCrud;
@@ -52,8 +56,10 @@ public class DepositoFragment extends Fragment {
     private Deposito deposito;
     private List<EntidadeDominio> depositos = new ArrayList<>();
     private List<EntidadeDominio> lista = new ArrayList<>();
+    private List<EntidadeDominio> moedas = new ArrayList<>();
 
     private IStrategy iStrategy;
+    private Handler handler = new Handler();
 
     public DepositoFragment() {
         // Required empty public constructor
@@ -78,6 +84,7 @@ public class DepositoFragment extends Fragment {
                              Bundle savedInstanceState) {
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.activity_depositos, container, false);
 
+        imgAdd = (ImageButton) rootView.findViewById(R.id.imgAddDeposito);
         lstDepositos = (ListView) rootView.findViewById(R.id.lstDepositos);
         spnClassificacaoDeposito = (Spinner) rootView.findViewById(R.id.spnClassificacaoDeposito);
         List<String> classificacao = new ArrayList<>();
@@ -91,43 +98,29 @@ public class DepositoFragment extends Fragment {
         adapterClassif.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnClassificacaoDeposito.setAdapter(adapterClassif);
 
-//        lista = new ArrayList<>();
-//
-//        Deposito deposito = new Deposito();
-//
-//        deposito.setData(new Date());
-//
-//        Moeda moeda = new Moeda();
-//        moeda.setSigla("BTC");
-//        moeda.setTaxa(new BigDecimal("102.00"));
-//
-//        deposito.setTotaLiquido(new BigDecimal("100.00"));
-//        deposito.setValorAplicado(new BigDecimal("200.00"));
-//        deposito.setComissao(new BigDecimal("0.21"));
-//        deposito.setMoeda(moeda);
-//
-//        for (int i = 0; i < 7; i++) {
-//            lista.add(deposito);
-//        }
-
-//        AdapterDepositos adapterDepositos = new AdapterDepositos(getActivity().getApplicationContext(), lista);
-//        lstDepositos.setAdapter(adapterDepositos);
 
         depositos = SessionUtil.getInstance().getDepositos();
         AdapterDepositos adapterDepositos = new AdapterDepositos(getActivity().getApplicationContext(), depositos);
         lstDepositos.setAdapter(adapterDepositos);
 
-        if(depositos.size()<1){
-            showDialog();
-        }
-
         lstDepositos.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
 
+
+                deposito = new Deposito();
+                deposito = (Deposito) lstDepositos.getItemAtPosition(i);
+                
                 showDialog();
 
                 return true;
+            }
+        });
+
+        imgAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialog();
             }
         });
 
@@ -139,7 +132,6 @@ public class DepositoFragment extends Fragment {
      */
     private void showDialog() {
 
-        AlertDialog alert;
         AlertDialog.Builder dialogCrud = new AlertDialog.Builder(getContext());
 
         inflater = getActivity().getLayoutInflater();
@@ -155,6 +147,8 @@ public class DepositoFragment extends Fragment {
                 } else {
                     criarDialogDeposito("Deletar");
                 }
+
+                alert.dismiss();
             }
 
         };
@@ -194,13 +188,17 @@ public class DepositoFragment extends Fragment {
         inflater = getActivity().getLayoutInflater();
         final View dialogView = inflater.inflate(R.layout.dialog_deposito, null);
         dialogDepositoBuilder.setView(dialogView);
-        dialogDepositoBuilder.setTitle("COMPRAS" + " - " + operacao);
+        dialogDepositoBuilder.setTitle("DEPÓSITOS" + " - " + operacao);
 
         final EditText data = (EditText) dialogView.findViewById(R.id.inpDataDialogDeposito);
         final EditText valorAplicado = (EditText) dialogView.findViewById(R.id.inpValorDialogDeposito);
 
         final Spinner spnMoeda = (Spinner) dialogView.findViewById(R.id.spnMoedaDialogDeposito);
-        ArrayAdapter adapterMoedas = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, SessionUtil.getInstance().getMoedas());
+
+        moedas = SessionUtil.getInstance().getMoedas();
+
+
+        ArrayAdapter adapterMoedas = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, moedas);
         adapterMoedas.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnMoeda.setAdapter(adapterMoedas);
 
@@ -242,7 +240,7 @@ public class DepositoFragment extends Fragment {
                     deposito.setValorAplicado(new BigDecimal(valorAplicado.getText().toString()));
                     deposito.setMoeda((Moeda) spnMoeda.getSelectedItem());
 
-                    if (salvar(deposito) > 0) {
+                    if (salvar(deposito)) {
                         Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
 
 
@@ -256,10 +254,27 @@ public class DepositoFragment extends Fragment {
                         Toast.makeText(getContext(), "Não foi Possível Deletar", Toast.LENGTH_LONG).show();
                     }
                 }
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        TelaHelper.atualizarSession(deposito);
 
-                depositos = SessionUtil.getInstance().getDepositos();
-                AdapterDepositos adapterDepositos = new AdapterDepositos(getActivity().getApplicationContext(), depositos);
-                lstDepositos.setAdapter(adapterDepositos);
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                depositos = SessionUtil.getInstance().getDepositos();
+                                if (depositos != null) {
+                                    AdapterDepositos adapterDepositos = new AdapterDepositos(getContext(), depositos);
+                                    lstDepositos.setAdapter(adapterDepositos);
+
+                                }
+
+                            }
+                        });
+
+                    }
+                });
+                t.start();
 
             }
         })
@@ -292,22 +307,26 @@ public class DepositoFragment extends Fragment {
 
         try {
             iStrategy = new DeletarStrategy();
-            iStrategy.executar(deposito);
+            if(iStrategy.executar(deposito)){
+                return true;
+            }else{
+                return false;
+            }
 
         } catch (Exception e) {
             return false;
         } finally {
             dialogProgress.dismiss();
         }
-        return true;
     }
 
     /**
      * Chama o Strategy para salvar
+     *
      * @param deposito com os dados
      * @return Maior que 1 se tudo deu certo
      */
-    private Long salvar(final Deposito deposito) {
+    private boolean salvar(final Deposito deposito) {
 
         dialogProgress = new ProgressDialog(getContext());
         dialogProgress.setMessage("Processando...");
@@ -317,15 +336,18 @@ public class DepositoFragment extends Fragment {
         try {
 
             iStrategy = new SalvarStrategy();
-            iStrategy.executar(deposito);
+            if(iStrategy.executar(deposito)){
+                return true;
+            }else{
+                return false;
+            }
 
 
         } catch (Exception e) {
-            return 0l;
+            return false;
         } finally {
             dialogProgress.dismiss();
         }
-        return deposito.getId();
     }
 
 }

@@ -33,6 +33,7 @@ import br.com.managercoin.dominio.Despesa;
 import br.com.managercoin.dominio.EntidadeDominio;
 import br.com.managercoin.dominio.Investidor;
 import br.com.managercoin.dominio.Moeda;
+import br.com.managercoin.dominio.Movimentacao;
 import br.com.managercoin.dominio.Saque;
 import br.com.managercoin.dominio.Venda;
 
@@ -285,12 +286,6 @@ public class HttpClient {
                 retorno.append(output);
             }
 
-            GsonBuilder gsonBuilder = new GsonBuilder();
-            gsonBuilder.registerTypeAdapter(Date.class, new DateDeserializer(new SimpleDateFormat("dd/MM/yyyy")));
-
-            gson = gsonBuilder.create();
-
-
             conn.disconnect();
 
         } catch (Exception e) {
@@ -298,7 +293,7 @@ public class HttpClient {
             return null;
         }
 
-        return gson.toJson(retorno.toString());
+        return retorno.toString();
     }
 
 
@@ -418,6 +413,7 @@ public class HttpClient {
         String urlSaques = WebServiceUtil.getUrlSaqueFindall();
         String urlDespesas = WebServiceUtil.getUrlDespesaFindall();
         String urlVendas = WebServiceUtil.getUrlVendaFindall();
+        String urlMovimentacoes = WebServiceUtil.getUrlMovimentacoesFindall();
 
         Type listaType = null;
 
@@ -445,7 +441,12 @@ public class HttpClient {
 
             listaType = new TypeToken<List<Venda>>() {
             }.getType();
-        } else {
+        } else if (URL.equals(urlMovimentacoes)) {
+
+            listaType = new TypeToken<List<Movimentacao>>() {
+            }.getType();
+
+        }else {
 
             listaType = new TypeToken<List<EntidadeDominio>>() {
             }.getType();

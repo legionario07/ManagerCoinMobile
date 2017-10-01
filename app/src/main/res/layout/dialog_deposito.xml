@@ -25,6 +25,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="8"
             android:gravity="center|left"
+            android:inputType="date"
             android:textSize="15dp"
             android:paddingRight="10dp"
             android:hint="Digite a Data"
@@ -60,6 +61,7 @@
             android:layout_weight="8"
             android:gravity="center|left"
             android:textSize="15dp"
+            android:inputType="numberDecimal"
             android:paddingRight="10dp"
             android:hint="Digite o Valor"
             />

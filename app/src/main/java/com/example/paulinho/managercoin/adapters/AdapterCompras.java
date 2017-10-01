@@ -54,7 +54,7 @@ public class AdapterCompras extends ArrayAdapter<EntidadeDominio> {
             txtCompraMoeda.setText(compra.getMoeda().getSigla());
             txtCompraQTDE.setText(compra.getValorAplicado().toString());
             txtCompraTaxa.setText(compra.getMoeda().getTaxa().toString());
-            txtCompraTotal.setText(compra.getMoeda().getTotal().toString());
+            txtCompraTotal.setText(compra.getTotalLiquido().toString());
         }
 
         return convertView;

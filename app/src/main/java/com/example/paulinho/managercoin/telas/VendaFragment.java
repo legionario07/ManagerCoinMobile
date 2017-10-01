@@ -3,6 +3,7 @@ package com.example.paulinho.managercoin.telas;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -22,6 +23,7 @@ import com.example.paulinho.managercoin.strategy.DeletarStrategy;
 import com.example.paulinho.managercoin.strategy.IStrategy;
 import com.example.paulinho.managercoin.strategy.SalvarStrategy;
 import com.example.paulinho.managercoin.utils.SessionUtil;
+import com.example.paulinho.managercoin.utils.TelaHelper;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -38,11 +40,13 @@ public class VendaFragment extends Fragment {
 
     private ListView lstVendas;
     private Spinner spnClassificacaoVenda;
+    private ImageButton imgAdd;
 
     private LayoutInflater inflater;
 
     private AlertDialog.Builder dialogVendaBuilder;
     private AlertDialog dialog;
+    private AlertDialog alert;
 
     //private ImageButton imgButtonEditCrud;
     private ImageButton imgButtonNewCrud;
@@ -56,6 +60,8 @@ public class VendaFragment extends Fragment {
     private Venda venda;
 
     private IStrategy iStrategy;
+    private Handler handler = new Handler();
+    private Thread t;
 
     public VendaFragment() {
         // Required empty public constructor
@@ -80,6 +86,7 @@ public class VendaFragment extends Fragment {
                              Bundle savedInstanceState) {
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.activity_vendas, container, false);
 
+        imgAdd = (ImageButton) rootView.findViewById(R.id.imgAddVenda);
         lstVendas = (ListView) rootView.findViewById(R.id.lstVendas);
         spnClassificacaoVenda = (Spinner) rootView.findViewById(R.id.spnClassificacaoVenda);
         List<String> classificacao = new ArrayList<>();
@@ -93,42 +100,27 @@ public class VendaFragment extends Fragment {
         adapterClassif.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnClassificacaoVenda.setAdapter(adapterClassif);
 
-//        lista = new ArrayList<>();
-//
-//        Venda venda = new Venda();
-//
-//        venda.setData(new Date());
-//
-//        Moeda moeda = new Moeda();
-//        moeda.setSigla("BTC");
-//        moeda.setTaxa(new BigDecimal("102.00"));
-//
-//        venda.setTotaLiquido(new BigDecimal("100.00"));
-//        venda.setValorAplicado(new BigDecimal("200.00"));
-//        venda.setMoeda(moeda);
-//
-//        for (int i = 0; i < 7; i++) {
-//            lista.add(venda);
-//        }
-//
-//        AdapterVendas adapterVendas = new AdapterVendas(getActivity().getApplicationContext(), lista);
-//        lstVendas.setAdapter(adapterVendas);
-
         vendas = SessionUtil.getInstance().getVendas();
         AdapterVendas adapterVendas = new AdapterVendas(getActivity().getApplicationContext(), vendas);
         lstVendas.setAdapter(adapterVendas);
-
-        if (vendas.size() < 1) {
-            showDialog();
-        }
 
         lstVendas.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
 
+                venda = new Venda();
+                venda = (Venda) lstVendas.getItemAtPosition(i);
+
                 showDialog();
 
                 return true;
+            }
+        });
+
+        imgAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialog();
             }
         });
 
@@ -140,7 +132,6 @@ public class VendaFragment extends Fragment {
      */
     private void showDialog() {
 
-        AlertDialog alert;
         AlertDialog.Builder dialogCrud = new AlertDialog.Builder(getContext());
 
         inflater = getActivity().getLayoutInflater();
@@ -152,10 +143,12 @@ public class VendaFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 if (imgButtonNewCrud.getId() == view.getId()) {
-                    criarDialogVenda("Novo");
+                    criarDialogVenda("Cadastrar");
                 } else {
                     criarDialogVenda("Deletar");
                 }
+
+                alert.dismiss();
             }
 
         };
@@ -195,13 +188,16 @@ public class VendaFragment extends Fragment {
         inflater = getActivity().getLayoutInflater();
         final View dialogView = inflater.inflate(R.layout.dialog_venda, null);
         dialogVendaBuilder.setView(dialogView);
-        dialogVendaBuilder.setTitle("COMPRAS" + " - " + operacao);
+        dialogVendaBuilder.setTitle("VENDAS" + " - " + operacao);
 
         final EditText data = (EditText) dialogView.findViewById(R.id.inpDataDialogVenda);
         final EditText quantidade = (EditText) dialogView.findViewById(R.id.inpQuantidadeDialogVenda);
         final EditText taxa = (EditText) dialogView.findViewById(R.id.inpTaxaDialogVenda);
 
         final Spinner spnMoeda = (Spinner) dialogView.findViewById(R.id.spnMoedaDialogVenda);
+
+        moedas = SessionUtil.getInstance().getMoedas();
+
         ArrayAdapter adapterMoedas = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, moedas);
         adapterMoedas.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnMoeda.setAdapter(adapterMoedas);
@@ -242,7 +238,7 @@ public class VendaFragment extends Fragment {
                     venda.setMoeda((Moeda) spnMoeda.getSelectedItem());
                     venda.getMoeda().setTaxa(new BigDecimal(taxa.getText().toString()));
 
-                    if (salvar(venda) > 0) {
+                    if (salvar(venda)) {
                         Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
@@ -255,9 +251,32 @@ public class VendaFragment extends Fragment {
                     }
                 }
 
-                vendas = SessionUtil.getInstance().getVendas();
-                AdapterVendas adapterVendas = new AdapterVendas(getActivity().getApplicationContext(), vendas);
-                lstVendas.setAdapter(adapterVendas);
+                t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        TelaHelper.atualizarSession(venda);
+
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    t.sleep(100);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                vendas = SessionUtil.getInstance().getVendas();
+                                if (vendas != null) {
+                                    AdapterVendas adapterVendas = new AdapterVendas(getContext(), vendas);
+
+                                    lstVendas.setAdapter(adapterVendas);
+                                }
+                            }
+                        });
+
+                    }
+                });
+                t.start();
+
 
             }
         })
@@ -290,13 +309,16 @@ public class VendaFragment extends Fragment {
 
         try {
             iStrategy = new DeletarStrategy();
-            iStrategy.executar(venda);
+            if (iStrategy.executar(venda)) {
+                return true;
+            } else {
+                return false;
+            }
         } catch (Exception e) {
             return false;
         } finally {
             dialogProgress.dismiss();
         }
-        return true;
     }
 
 
@@ -305,24 +327,27 @@ public class VendaFragment extends Fragment {
      *
      * @return return true se tudo deu certo
      */
-    private Long salvar(final Venda venda) {
-        dialogProgress.setTitle("ManagerCoin");
+    private boolean salvar(final Venda venda) {
 
         dialogProgress = new ProgressDialog(getContext());
+        dialogProgress.setTitle("ManagerCoin");
         dialogProgress.setMessage("Processando...");
         dialogProgress.show();
 
         try {
 
             iStrategy = new SalvarStrategy();
-            iStrategy.executar(venda);
+            if (iStrategy.executar(venda)) {
+                return true;
+            } else {
+                return false;
+            }
 
         } catch (Exception e) {
-            return 0l;
+            return false;
         } finally {
             dialogProgress.dismiss();
         }
-        return venda.getId();
     }
 
 
