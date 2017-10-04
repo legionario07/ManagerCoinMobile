@@ -3,7 +3,6 @@ package com.example.paulinho.managercoin.telas;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -21,6 +20,7 @@ import com.example.paulinho.managercoin.R;
 import com.example.paulinho.managercoin.adapters.AdapterSaques;
 import com.example.paulinho.managercoin.comparadores.MovimentacaoComparator;
 import com.example.paulinho.managercoin.strategy.DeletarStrategy;
+import com.example.paulinho.managercoin.strategy.EditarStrategy;
 import com.example.paulinho.managercoin.strategy.IStrategy;
 import com.example.paulinho.managercoin.strategy.SalvarStrategy;
 import com.example.paulinho.managercoin.utils.SessionUtil;
@@ -49,7 +49,7 @@ public class SaqueFragment extends Fragment {
     private AlertDialog dialog;
     private AlertDialog alert;
 
-    //private ImageButton imgButtonEditCrud;
+    private ImageButton imgButtonEditCrud;
     private ImageButton imgButtonNewCrud;
     private ImageButton imgButtonDeleteCrud;
 
@@ -61,7 +61,9 @@ public class SaqueFragment extends Fragment {
     private Saque saque;
 
     private IStrategy iStrategy;
-    private Handler handler = new Handler();
+
+    private EditText data;
+    private EditText valor;
 
     public SaqueFragment() {
         // Required empty public constructor
@@ -101,7 +103,7 @@ public class SaqueFragment extends Fragment {
         spnClassificacaoSaque.setAdapter(adapterClassif);
 
         saques = SessionUtil.getInstance().getSaques();
-        AdapterSaques adapterSaques = new AdapterSaques(getActivity().getApplicationContext(), saques);
+        AdapterSaques adapterSaques = new AdapterSaques(getContext(), saques);
         lstSaques.setAdapter(adapterSaques);
 
 
@@ -112,7 +114,7 @@ public class SaqueFragment extends Fragment {
 
                 saque = new Saque();
                 saque = (Saque) lstSaques.getItemAtPosition(i);
-                
+
                 showDialog();
 
                 return true;
@@ -130,9 +132,14 @@ public class SaqueFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
 
-                saques = MovimentacaoComparator.ordenar(String.valueOf(spnClassificacaoSaque.getItemIdAtPosition(i)), saques);
+                saques = MovimentacaoComparator.ordenar((String) spnClassificacaoSaque.getSelectedItem(), saques);
+
+                //Atualiza o ListView com a ordenação aDequada
+                AdapterSaques adapterSaques = new AdapterSaques(getActivity().getApplicationContext(), saques);
+                lstSaques.setAdapter(adapterSaques);
 
             }
+
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
 
@@ -159,8 +166,10 @@ public class SaqueFragment extends Fragment {
             public void onClick(View view) {
                 if (imgButtonNewCrud.getId() == view.getId()) {
                     criarDialogSaque("Cadastrar");
-                } else {
+                } else if (imgButtonDeleteCrud.getId() == view.getId()) {
                     criarDialogSaque("Deletar");
+                } else {
+                    criarDialogSaque("Editar");
                 }
 
                 alert.dismiss();
@@ -168,13 +177,20 @@ public class SaqueFragment extends Fragment {
 
         };
 
-        //imgButtonEditCrud = (ImageButton) dialogView.findViewById(imgButtonEditCrud);
+        imgButtonEditCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonEditCrud);
         imgButtonNewCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonNewCrud);
         imgButtonDeleteCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonDeleteCrud);
 
-        //imgButtonEditCrud.setOnClickListener(criarDialog);
+        imgButtonEditCrud.setOnClickListener(criarDialog);
         imgButtonNewCrud.setOnClickListener(criarDialog);
         imgButtonDeleteCrud.setOnClickListener(criarDialog);
+
+
+        //Existe algum item?
+        if (SessionUtil.getInstance().getSaques().size() < 0) {
+            imgButtonDeleteCrud.setEnabled(false);
+            imgButtonEditCrud.setEnabled(false);
+        }
 
 
         dialogCrud.setNegativeButton("CANCELAR", new DialogInterface.OnClickListener()
@@ -201,12 +217,12 @@ public class SaqueFragment extends Fragment {
         dialogSaqueBuilder = new AlertDialog.Builder(getContext());
 
         inflater = getActivity().getLayoutInflater();
-        final View dialogView = inflater.inflate(R.layout.dialog_compra, null);
+        final View dialogView = inflater.inflate(R.layout.dialog_saque, null);
         dialogSaqueBuilder.setView(dialogView);
         dialogSaqueBuilder.setTitle("SAQUES" + " - " + operacao);
 
-        final EditText data = (EditText) dialogView.findViewById(R.id.inpDataDialogSaque);
-        final EditText valor = (EditText) dialogView.findViewById(R.id.inpValorDialogSaque);
+        data = (EditText) dialogView.findViewById(R.id.inpDataDialogSaque);
+        valor = (EditText) dialogView.findViewById(R.id.inpValorDialogSaque);
 
         final Spinner spnMoeda = (Spinner) dialogView.findViewById(R.id.spnMoedaDialogSaque);
 
@@ -237,9 +253,16 @@ public class SaqueFragment extends Fragment {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
 
+                String retorno = validarSaque();
+
+                if (retorno.length() > 0) {
+                    Toast.makeText(getContext(), retorno, Toast.LENGTH_LONG).show();
+                    return;
+                }
+
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
-                if (operacao.equals("Cadastrar")) {
+                if (!operacao.equals("Deletar")) {
                     saque = new Saque();
 
                     try {
@@ -251,10 +274,18 @@ public class SaqueFragment extends Fragment {
                     saque.setValorAplicado(new BigDecimal(valor.getText().toString()));
                     saque.setMoeda((Moeda) spnMoeda.getSelectedItem());
 
-                    if (salvar(saque)) {
-                        Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
+                    if (operacao.equals("Cadastrar")) {
+                        if (salvar(saque)) {
+                            Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
+                        }
                     } else {
-                        Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
+                        if (editar(saque)) {
+                            Toast.makeText(getContext(), "Editado com Sucesso", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getContext(), "Não foi Possível Editar", Toast.LENGTH_LONG).show();
+                        }
                     }
                 } else if (operacao.equals("Deletar")) {
                     if (deletar()) {
@@ -264,39 +295,25 @@ public class SaqueFragment extends Fragment {
                     }
                 }
 
-                Thread t = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        TelaHelper.atualizarSession(saque);
+                TelaHelper.atualizarSession(saque);
 
-                        handler.post(new Runnable() {
+                saques = SessionUtil.getInstance().getSaques();
+                if (saques != null) {
+                    AdapterSaques adapterSaques = new AdapterSaques(getContext(), saques);
+                    lstSaques.setAdapter(adapterSaques);
+                }
+            }
+        })
+                .
+
+                        setNegativeButton("CANCELAR", new DialogInterface.OnClickListener() {
                             @Override
-                            public void run() {
-                                saques = SessionUtil.getInstance().getSaques();
-                                if (saques != null) {
-                                    AdapterSaques adapterSaques = new AdapterSaques(getContext(), saques);
-                                    lstSaques.setAdapter(adapterSaques);
-
-
-                                }
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.cancel();
+                                return;
 
                             }
                         });
-
-                    }
-                });
-                t.start();
-
-            }
-        })
-                .setNegativeButton("CANCELAR", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.cancel();
-                        return;
-
-                    }
-                });
 
         dialog = dialogSaqueBuilder.create();
         dialog.setIcon(R.drawable.ic_shopping_cart_black_24dp);
@@ -309,6 +326,7 @@ public class SaqueFragment extends Fragment {
      *
      * @return return true se tudo deu certo
      */
+
     private boolean deletar() {
 
         dialogProgress = new ProgressDialog(getContext());
@@ -319,9 +337,9 @@ public class SaqueFragment extends Fragment {
         try {
 
             iStrategy = new DeletarStrategy();
-            if(iStrategy.executar(saque)){
+            if (iStrategy.executar(saque)) {
                 return true;
-            }else{
+            } else {
                 return false;
             }
 
@@ -348,9 +366,9 @@ public class SaqueFragment extends Fragment {
         try {
 
             iStrategy = new SalvarStrategy();
-            if(iStrategy.executar(saque)){
+            if (iStrategy.executar(saque)) {
                 return true;
-            }else{
+            } else {
                 return false;
             }
 
@@ -360,6 +378,49 @@ public class SaqueFragment extends Fragment {
         } finally {
             dialogProgress.dismiss();
         }
+    }
+
+    /**
+     * Chama o Strategy para editar
+     *
+     * @param saque com os dados
+     * @return Maior que 1 se tudo deu certo
+     */
+    private boolean editar(final Saque saque) {
+        dialogProgress.setTitle("ManagerCoin");
+
+        dialogProgress = new ProgressDialog(getContext());
+        dialogProgress.setMessage("Processando...");
+        dialogProgress.show();
+
+        try {
+
+            iStrategy = new EditarStrategy();
+            if (iStrategy.executar(saque)) {
+                return true;
+            } else {
+                return false;
+            }
+
+
+        } catch (Exception e) {
+            return false;
+        } finally {
+            dialogProgress.dismiss();
+        }
+    }
+
+    private String validarSaque() {
+
+        String retorno = "";
+
+        if (data.getText().length() < 1) {
+            retorno = "Data inválida";
+        } else if (valor.getText().length() < 1) {
+            retorno = "Valor inválido";
+        }
+
+        return retorno;
     }
 
 }

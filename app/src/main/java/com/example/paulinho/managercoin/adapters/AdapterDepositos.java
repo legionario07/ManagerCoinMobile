@@ -45,6 +45,7 @@ public class AdapterDepositos extends ArrayAdapter<EntidadeDominio> {
         TextView txtDepositoQTDE = (TextView) convertView.findViewById(R.id.txtDepositoQTDE);
         TextView txtDepositoComissao = (TextView) convertView.findViewById(R.id.txtDepositoComissao);
         TextView txtDepositoTotal = (TextView) convertView.findViewById(R.id.txtDepositoTotal);
+
         if(lista.size()>0) {
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
             String data = sdf.format(deposito.getData());

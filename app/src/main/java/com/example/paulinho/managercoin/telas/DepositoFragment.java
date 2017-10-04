@@ -3,7 +3,6 @@ package com.example.paulinho.managercoin.telas;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -21,6 +20,7 @@ import com.example.paulinho.managercoin.R;
 import com.example.paulinho.managercoin.adapters.AdapterDepositos;
 import com.example.paulinho.managercoin.comparadores.MovimentacaoComparator;
 import com.example.paulinho.managercoin.strategy.DeletarStrategy;
+import com.example.paulinho.managercoin.strategy.EditarStrategy;
 import com.example.paulinho.managercoin.strategy.IStrategy;
 import com.example.paulinho.managercoin.strategy.SalvarStrategy;
 import com.example.paulinho.managercoin.utils.SessionUtil;
@@ -50,7 +50,7 @@ public class DepositoFragment extends Fragment {
     private ProgressDialog dialogProgress;
     private AlertDialog alert;
 
-    //private ImageButton imgButtonEditCrud;
+    private ImageButton imgButtonEditCrud;
     private ImageButton imgButtonNewCrud;
     private ImageButton imgButtonDeleteCrud;
 
@@ -60,7 +60,9 @@ public class DepositoFragment extends Fragment {
     private List<EntidadeDominio> moedas = new ArrayList<>();
 
     private IStrategy iStrategy;
-    private Handler handler = new Handler();
+
+    private EditText data;
+    private EditText valorAplicado;
 
     public DepositoFragment() {
         // Required empty public constructor
@@ -99,9 +101,8 @@ public class DepositoFragment extends Fragment {
         adapterClassif.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnClassificacaoDeposito.setAdapter(adapterClassif);
 
-
         depositos = SessionUtil.getInstance().getDepositos();
-        AdapterDepositos adapterDepositos = new AdapterDepositos(getActivity().getApplicationContext(), depositos);
+        AdapterDepositos adapterDepositos = new AdapterDepositos(getContext(), depositos);
         lstDepositos.setAdapter(adapterDepositos);
 
         lstDepositos.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -111,7 +112,7 @@ public class DepositoFragment extends Fragment {
 
                 deposito = new Deposito();
                 deposito = (Deposito) lstDepositos.getItemAtPosition(i);
-                
+
                 showDialog();
 
                 return true;
@@ -129,9 +130,14 @@ public class DepositoFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
 
-                depositos = MovimentacaoComparator.ordenar(String.valueOf(spnClassificacaoDeposito.getItemIdAtPosition(i)), depositos);
+                depositos = MovimentacaoComparator.ordenar((String) spnClassificacaoDeposito.getSelectedItem(), depositos);
+
+                //Atualiza o ListView com a Ordenação escolhida
+                AdapterDepositos adapterDepositos = new AdapterDepositos(getActivity().getApplicationContext(), depositos);
+                lstDepositos.setAdapter(adapterDepositos);
 
             }
+
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
 
@@ -158,8 +164,10 @@ public class DepositoFragment extends Fragment {
             public void onClick(View view) {
                 if (imgButtonNewCrud.getId() == view.getId()) {
                     criarDialogDeposito("Cadastrar");
-                } else {
+                } else if (imgButtonDeleteCrud.getId() == view.getId()) {
                     criarDialogDeposito("Deletar");
+                } else {
+                    criarDialogDeposito("Editar");
                 }
 
                 alert.dismiss();
@@ -167,13 +175,20 @@ public class DepositoFragment extends Fragment {
 
         };
 
-        //imgButtonEditCrud = (ImageButton) dialogView.findViewById(imgButtonEditCrud);
+        imgButtonEditCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonEditCrud);
         imgButtonNewCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonNewCrud);
         imgButtonDeleteCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonDeleteCrud);
 
-        //imgButtonEditCrud.setOnClickListener(criarDialog);
+        imgButtonEditCrud.setOnClickListener(criarDialog);
         imgButtonNewCrud.setOnClickListener(criarDialog);
         imgButtonDeleteCrud.setOnClickListener(criarDialog);
+
+
+        //Existe algum item?
+        if (SessionUtil.getInstance().getDepositos().size() < 0) {
+            imgButtonDeleteCrud.setEnabled(false);
+            imgButtonEditCrud.setEnabled(false);
+        }
 
 
         dialogCrud.setNegativeButton("CANCELAR", new DialogInterface.OnClickListener()
@@ -204,13 +219,12 @@ public class DepositoFragment extends Fragment {
         dialogDepositoBuilder.setView(dialogView);
         dialogDepositoBuilder.setTitle("DEPÓSITOS" + " - " + operacao);
 
-        final EditText data = (EditText) dialogView.findViewById(R.id.inpDataDialogDeposito);
-        final EditText valorAplicado = (EditText) dialogView.findViewById(R.id.inpValorDialogDeposito);
+        data = (EditText) dialogView.findViewById(R.id.inpDataDialogDeposito);
+        valorAplicado = (EditText) dialogView.findViewById(R.id.inpValorDialogDeposito);
 
         final Spinner spnMoeda = (Spinner) dialogView.findViewById(R.id.spnMoedaDialogDeposito);
 
         moedas = SessionUtil.getInstance().getMoedas();
-
 
         ArrayAdapter adapterMoedas = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, moedas);
         adapterMoedas.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -240,9 +254,16 @@ public class DepositoFragment extends Fragment {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
 
+                String retorno = validarDeposito();
+
+                if (retorno.length() > 0) {
+                    Toast.makeText(getContext(), retorno, Toast.LENGTH_LONG).show();
+                    return;
+                }
+
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
-                if (operacao.equals("Cadastrar")) {
+                if (!operacao.equals("Deletar")) {
                     deposito = new Deposito();
 
                     try {
@@ -254,13 +275,22 @@ public class DepositoFragment extends Fragment {
                     deposito.setValorAplicado(new BigDecimal(valorAplicado.getText().toString()));
                     deposito.setMoeda((Moeda) spnMoeda.getSelectedItem());
 
-                    if (salvar(deposito)) {
-                        Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
-
+                    if (operacao.equals("Cadastrar")) {
+                        if (salvar(deposito)) {
+                            Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
+                        }
 
                     } else {
-                        Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
+
+                        if (editar(deposito)) {
+                            Toast.makeText(getContext(), "Editado com Sucesso", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getContext(), "Não foi Possível Editar", Toast.LENGTH_LONG).show();
+                        }
                     }
+
                 } else if (operacao.equals("Deletar")) {
                     if (deletar()) {
                         Toast.makeText(getContext(), "Deletado com Sucesso", Toast.LENGTH_LONG).show();
@@ -268,38 +298,27 @@ public class DepositoFragment extends Fragment {
                         Toast.makeText(getContext(), "Não foi Possível Deletar", Toast.LENGTH_LONG).show();
                     }
                 }
-                Thread t = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        TelaHelper.atualizarSession(deposito);
+                TelaHelper.atualizarSession(deposito);
 
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                depositos = SessionUtil.getInstance().getDepositos();
-                                if (depositos != null) {
-                                    AdapterDepositos adapterDepositos = new AdapterDepositos(getContext(), depositos);
-                                    lstDepositos.setAdapter(adapterDepositos);
+                depositos = SessionUtil.getInstance().getDepositos();
+                if (depositos != null) {
+                    AdapterDepositos adapterDepositos = new AdapterDepositos(getContext(), depositos);
+                    lstDepositos.setAdapter(adapterDepositos);
 
-                                }
-
-                            }
-                        });
-
-                    }
-                });
-                t.start();
+                }
 
             }
         })
-                .setNegativeButton("CANCELAR", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.cancel();
-                        return;
+                .
 
-                    }
-                });
+                        setNegativeButton("CANCELAR", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.cancel();
+                                return;
+
+                            }
+                        });
 
         dialog = dialogDepositoBuilder.create();
         dialog.setIcon(R.drawable.ic_shopping_cart_black_24dp);
@@ -312,6 +331,7 @@ public class DepositoFragment extends Fragment {
      *
      * @return return true se tudo deu certo
      */
+
     private boolean deletar() {
 
         dialogProgress = new ProgressDialog(getContext());
@@ -321,9 +341,9 @@ public class DepositoFragment extends Fragment {
 
         try {
             iStrategy = new DeletarStrategy();
-            if(iStrategy.executar(deposito)){
+            if (iStrategy.executar(deposito)) {
                 return true;
-            }else{
+            } else {
                 return false;
             }
 
@@ -350,9 +370,9 @@ public class DepositoFragment extends Fragment {
         try {
 
             iStrategy = new SalvarStrategy();
-            if(iStrategy.executar(deposito)){
+            if (iStrategy.executar(deposito)) {
                 return true;
-            }else{
+            } else {
                 return false;
             }
 
@@ -362,6 +382,50 @@ public class DepositoFragment extends Fragment {
         } finally {
             dialogProgress.dismiss();
         }
+    }
+
+    /**
+     * Chama o Strategy para salvar
+     *
+     * @param deposito com os dados
+     * @return Maior que 1 se tudo deu certo
+     */
+    private boolean editar(final Deposito deposito) {
+
+        dialogProgress = new ProgressDialog(getContext());
+        dialogProgress.setMessage("Processando...");
+        dialogProgress.setTitle("ManagerCoin");
+        dialogProgress.show();
+
+        try {
+
+            iStrategy = new EditarStrategy();
+            if (iStrategy.executar(deposito)) {
+                return true;
+            } else {
+                return false;
+            }
+
+
+        } catch (Exception e) {
+            return false;
+        } finally {
+            dialogProgress.dismiss();
+        }
+    }
+
+
+
+    private String validarDeposito() {
+
+        String retorno = "";
+
+        if (data.getText().length() < 1) {
+            retorno = "Data inválida";
+        } else if (valorAplicado.getText().length() < 1) {
+            retorno = "Valor Aplicado inválido";
+        }
+        return retorno;
     }
 
 }

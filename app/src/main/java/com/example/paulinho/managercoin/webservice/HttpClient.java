@@ -59,8 +59,6 @@ public class HttpClient {
             HttpPost request = new HttpPost();
             request.setHeader("Content-Type", "application/json");
 
-            StringBuilder builder = new StringBuilder();
-
             request.setURI(new URI(enderecoURL));
 
             GsonBuilder gsonBuilder = new GsonBuilder();
@@ -455,66 +453,59 @@ public class HttpClient {
         return listaType;
     }
 
-    private String validaData(String dados) {
-        //String dadosSeparados[] = dados.split("\"");
-        //String data = dadosSeparados[3];
-        dados = dados.replace(" ", "/");
-        dados = dados.replace(",", "");
-        dados = dados.replace("\"", "");
-        String dataSeparada[] = dados.split("/");
-        String mes = dataSeparada[0];
-        String dia = dataSeparada[1];
-        String ano = dataSeparada[2];
+    /**
+     *
+     * @param enderecoURL - Endereço do WebService
+     * @param id - id do investidor
+     * @return
+     */
+    public static List<EntidadeDominio> findAllByInvestidor(String enderecoURL, Long id) {
 
-        switch (mes.toUpperCase()) {
-            case "JAN":
-                mes = "1";
-                break;
-            case "FEB":
-                mes = "2";
-                break;
-            case "MAR":
-                mes = "3";
-                break;
-            case "APR":
-                mes = "4";
-                break;
-            case "MAY":
-                mes = "5";
-                break;
-            case "JUN":
-                mes = "6";
-                break;
-            case "JUL":
-                mes = "7";
-                break;
-            case "AUG":
-                mes = "8";
-                break;
-            case "SEP":
-                mes = "9";
-                break;
-            case "OCT":
-                mes = "10";
-                break;
-            case "NOV":
-                mes = "11";
-                break;
-            case "DEC":
-                mes = "12";
-                break;
+        String output = null;
+        List<EntidadeDominio> lista = new ArrayList<>();
 
+        StringBuffer temp = new StringBuffer();
+        temp.append(enderecoURL);
+        temp.append("/");
+        temp.append(id);
+
+        try {
+            URL url = new URL(temp.toString());
+
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Failed : Http error code : "
+                        + conn.getResponseCode());
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+            retorno = new StringBuilder();
+
+            while ((output = br.readLine()) != null) {
+                retorno.append(output);
+            }
+
+            GsonBuilder gsonBuilder = new GsonBuilder();
+            gsonBuilder.registerTypeAdapter(Date.class, new DateDeserializer(new SimpleDateFormat("dd/MM/yyyy")));
+
+            gson = gsonBuilder.create();
+
+            lista = gson.fromJson(retorno.toString(), getTipoRetorno(enderecoURL));
+
+            conn.disconnect();
+
+        } catch (Exception e) {
+            Log.d("ERRO", e.getMessage());
+            return null;
         }
-
-        StringBuffer retorno = new StringBuffer();
-        retorno.append(dia);
-        retorno.append("/");
-        retorno.append(mes);
-        retorno.append("/");
-        retorno.append(ano);
-
-        return retorno.toString();
+        return lista;
     }
+
+
 
 
 }

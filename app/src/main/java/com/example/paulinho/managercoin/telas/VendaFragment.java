@@ -3,7 +3,6 @@ package com.example.paulinho.managercoin.telas;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -21,6 +20,7 @@ import com.example.paulinho.managercoin.R;
 import com.example.paulinho.managercoin.adapters.AdapterVendas;
 import com.example.paulinho.managercoin.comparadores.MovimentacaoComparator;
 import com.example.paulinho.managercoin.strategy.DeletarStrategy;
+import com.example.paulinho.managercoin.strategy.EditarStrategy;
 import com.example.paulinho.managercoin.strategy.IStrategy;
 import com.example.paulinho.managercoin.strategy.SalvarStrategy;
 import com.example.paulinho.managercoin.utils.SessionUtil;
@@ -36,8 +36,6 @@ import br.com.managercoin.dominio.EntidadeDominio;
 import br.com.managercoin.dominio.Moeda;
 import br.com.managercoin.dominio.Venda;
 
-import static com.example.paulinho.managercoin.R.id.spnClassificacaoCompra;
-
 
 public class VendaFragment extends Fragment {
 
@@ -51,20 +49,22 @@ public class VendaFragment extends Fragment {
     private AlertDialog dialog;
     private AlertDialog alert;
 
-    //private ImageButton imgButtonEditCrud;
+    private ImageButton imgButtonEditCrud;
     private ImageButton imgButtonNewCrud;
     private ImageButton imgButtonDeleteCrud;
 
     private ProgressDialog dialogProgress;
-    private List<EntidadeDominio> lista = new ArrayList<>();
     private List<EntidadeDominio> moedas = new ArrayList<>();
     private List<EntidadeDominio> vendas = new ArrayList<>();
 
     private Venda venda;
 
     private IStrategy iStrategy;
-    private Handler handler = new Handler();
-    private Thread t;
+
+    private EditText data;
+    private EditText quantidade;
+    private EditText taxa;
+
 
     public VendaFragment() {
         // Required empty public constructor
@@ -104,7 +104,7 @@ public class VendaFragment extends Fragment {
         spnClassificacaoVenda.setAdapter(adapterClassif);
 
         vendas = SessionUtil.getInstance().getVendas();
-        AdapterVendas adapterVendas = new AdapterVendas(getActivity().getApplicationContext(), vendas);
+        AdapterVendas adapterVendas = new AdapterVendas(getContext(), vendas);
         lstVendas.setAdapter(adapterVendas);
 
         lstVendas.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -131,9 +131,14 @@ public class VendaFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
 
-                vendas = MovimentacaoComparator.ordenar(String.valueOf(spnClassificacaoVenda.getItemIdAtPosition(i)), vendas);
+                vendas = MovimentacaoComparator.ordenar((String) spnClassificacaoVenda.getSelectedItem(), vendas);
+
+                //Atualiza a ListView com a Ordenação adequada
+                AdapterVendas adapterVendas = new AdapterVendas(getActivity().getApplicationContext(), vendas);
+                lstVendas.setAdapter(adapterVendas);
 
             }
+
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
 
@@ -160,23 +165,30 @@ public class VendaFragment extends Fragment {
             public void onClick(View view) {
                 if (imgButtonNewCrud.getId() == view.getId()) {
                     criarDialogVenda("Cadastrar");
-                } else {
+                } else if (imgButtonDeleteCrud.getId() == view.getId()) {
                     criarDialogVenda("Deletar");
+                } else {
+                    criarDialogVenda("Editar");
                 }
-
                 alert.dismiss();
             }
 
         };
 
-        //imgButtonEditCrud = (ImageButton) dialogView.findViewById(imgButtonEditCrud);
+        imgButtonEditCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonEditCrud);
         imgButtonNewCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonNewCrud);
         imgButtonDeleteCrud = (ImageButton) dialogView.findViewById(R.id.imgButtonDeleteCrud);
 
-        //imgButtonEditCrud.setOnClickListener(criarDialog);
+        imgButtonEditCrud.setOnClickListener(criarDialog);
         imgButtonNewCrud.setOnClickListener(criarDialog);
         imgButtonDeleteCrud.setOnClickListener(criarDialog);
 
+
+        //Existe algum item?
+        if (SessionUtil.getInstance().getVendas().size() < 0) {
+            imgButtonDeleteCrud.setEnabled(false);
+            imgButtonEditCrud.setEnabled(false);
+        }
 
         dialogCrud.setNegativeButton("CANCELAR", new DialogInterface.OnClickListener()
 
@@ -206,9 +218,9 @@ public class VendaFragment extends Fragment {
         dialogVendaBuilder.setView(dialogView);
         dialogVendaBuilder.setTitle("VENDAS" + " - " + operacao);
 
-        final EditText data = (EditText) dialogView.findViewById(R.id.inpDataDialogVenda);
-        final EditText quantidade = (EditText) dialogView.findViewById(R.id.inpQuantidadeDialogVenda);
-        final EditText taxa = (EditText) dialogView.findViewById(R.id.inpTaxaDialogVenda);
+        data = (EditText) dialogView.findViewById(R.id.inpDataDialogVenda);
+        quantidade = (EditText) dialogView.findViewById(R.id.inpQuantidadeDialogVenda);
+        taxa = (EditText) dialogView.findViewById(R.id.inpTaxaDialogVenda);
 
         final Spinner spnMoeda = (Spinner) dialogView.findViewById(R.id.spnMoedaDialogVenda);
 
@@ -239,9 +251,17 @@ public class VendaFragment extends Fragment {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
 
+                String retorno = validarVenda();
+
+                if (retorno.length() > 0) {
+                    Toast.makeText(getContext(), retorno, Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
-                if (operacao.equals("Cadastrar")) {
+                if (!operacao.equals("Deletar")) {
                     venda = new Venda();
 
                     try {
@@ -254,10 +274,18 @@ public class VendaFragment extends Fragment {
                     venda.setMoeda((Moeda) spnMoeda.getSelectedItem());
                     venda.getMoeda().setTaxa(new BigDecimal(taxa.getText().toString()));
 
-                    if (salvar(venda)) {
-                        Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
+                    if (operacao.equals("Cadastrar")) {
+                        if (salvar(venda)) {
+                            Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
+                        }
                     } else {
-                        Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
+                        if (editar(venda)) {
+                            Toast.makeText(getContext(), "Editado com Sucesso", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getContext(), "Não foi Possível Editar", Toast.LENGTH_LONG).show();
+                        }
                     }
                 } else if (operacao.equals("Deletar")) {
                     if (deletar()) {
@@ -267,31 +295,14 @@ public class VendaFragment extends Fragment {
                     }
                 }
 
-                t = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        TelaHelper.atualizarSession(venda);
+                TelaHelper.atualizarSession(venda);
 
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    t.sleep(100);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                                vendas = SessionUtil.getInstance().getVendas();
-                                if (vendas != null) {
-                                    AdapterVendas adapterVendas = new AdapterVendas(getContext(), vendas);
+                vendas = SessionUtil.getInstance().getVendas();
+                if (vendas != null) {
+                    AdapterVendas adapterVendas = new AdapterVendas(getContext(), vendas);
 
-                                    lstVendas.setAdapter(adapterVendas);
-                                }
-                            }
-                        });
-
-                    }
-                });
-                t.start();
+                    lstVendas.setAdapter(adapterVendas);
+                }
 
 
             }
@@ -339,7 +350,7 @@ public class VendaFragment extends Fragment {
 
 
     /**
-     * chama o strategy para deletar
+     * chama o strategy para salvar
      *
      * @return return true se tudo deu certo
      */
@@ -364,6 +375,51 @@ public class VendaFragment extends Fragment {
         } finally {
             dialogProgress.dismiss();
         }
+    }
+
+    /**
+     * chama o strategy para editar
+     *
+     * @return return true se tudo deu certo
+     */
+    private boolean editar(final Venda venda) {
+
+        dialogProgress = new ProgressDialog(getContext());
+        dialogProgress.setTitle("ManagerCoin");
+        dialogProgress.setMessage("Processando...");
+        dialogProgress.show();
+
+        try {
+
+            iStrategy = new EditarStrategy();
+            if (iStrategy.executar(venda)) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (Exception e) {
+            return false;
+        } finally {
+            dialogProgress.dismiss();
+        }
+    }
+
+
+
+    private String validarVenda() {
+
+        String retorno = "";
+
+        if (data.getText().length() < 1) {
+            retorno = "Data inválida";
+        } else if (quantidade.getText().length() < 1) {
+            retorno = "Quantidade inválida";
+        } else if (taxa.getText().length() < 1) {
+            retorno = "Taxa inválida";
+        }
+
+        return retorno;
     }
 
 
