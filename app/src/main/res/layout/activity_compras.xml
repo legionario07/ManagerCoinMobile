@@ -29,6 +29,17 @@
             android:layout_width="50dp"
             android:layout_height="24dp" />
 
+        <View
+            android:layout_width="100dp"
+            android:layout_height="1dp"/>
+
+        <ImageButton
+            android:id="@+id/imgRefleshCompra"
+            android:background="#dcdcdc"
+            android:src="@drawable/ic_refresh_black_24dp"
+            android:layout_width="50dp"
+            android:layout_height="24dp" />
+
         <TextView
             android:text="Classif.:"
             android:textSize="11sp"

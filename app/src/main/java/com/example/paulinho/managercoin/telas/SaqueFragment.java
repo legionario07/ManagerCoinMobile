@@ -2,6 +2,7 @@ package com.example.paulinho.managercoin.telas;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
@@ -14,6 +15,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.paulinho.managercoin.R;
@@ -42,6 +44,8 @@ public class SaqueFragment extends Fragment {
     private ListView lstSaques;
     private Spinner spnClassificacaoSaque;
     private ImageButton imgAdd;
+    private ImageButton imgReflesh;
+    private TextView txtTotalSacado;
 
     private LayoutInflater inflater;
 
@@ -89,8 +93,11 @@ public class SaqueFragment extends Fragment {
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.activity_saques, container, false);
 
         imgAdd = (ImageButton) rootView.findViewById(R.id.imgAddSaque);
+        imgReflesh = (ImageButton) rootView.findViewById(R.id.imgRefleshSaque);
         lstSaques = (ListView) rootView.findViewById(R.id.lstSaques);
         spnClassificacaoSaque = (Spinner) rootView.findViewById(R.id.spnClassificacaoSaque);
+        txtTotalSacado = (TextView) rootView.findViewById(R.id.txtTotalSacado);
+
         List<String> classificacao = new ArrayList<>();
         classificacao.add("Data");
         classificacao.add("Moeda");
@@ -105,6 +112,8 @@ public class SaqueFragment extends Fragment {
         saques = SessionUtil.getInstance().getSaques();
         AdapterSaques adapterSaques = new AdapterSaques(getContext(), saques);
         lstSaques.setAdapter(adapterSaques);
+
+        atualizarTotalSaque();
 
 
         lstSaques.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -124,7 +133,22 @@ public class SaqueFragment extends Fragment {
         imgAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showDialog();
+                saque = new Saque();
+                criarDialogSaque("Cadastrar");
+            }
+        });
+
+        imgReflesh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (SessionUtil.getInstance().getSaques() != null) {
+                    AdapterSaques adapterSaques = new AdapterSaques(getContext(), SessionUtil.getInstance().getSaques());
+                    lstSaques.setAdapter(adapterSaques);
+                }
+
+                atualizarTotalSaque();
+
             }
         });
 
@@ -149,6 +173,26 @@ public class SaqueFragment extends Fragment {
         return rootView;
     }
 
+    private void atualizarTotalSaque() {
+
+
+        BigDecimal retorno = new BigDecimal("0.0");
+
+        for (EntidadeDominio entidadeDominio : SessionUtil.getInstance().getSaques()) {
+
+            if (entidadeDominio instanceof Saque) {
+                Saque saque = new Saque();
+                saque = (Saque) entidadeDominio;
+
+                if (saque.getMoeda().getNome().equals("REAL")) {
+                    retorno = retorno.add(saque.getTotalLiquido());
+                }
+
+            }
+
+        }
+    }
+    
     /**
      * Cria o Dialog com as opçoes Inserir, Editar e Excluir
      */
@@ -184,13 +228,6 @@ public class SaqueFragment extends Fragment {
         imgButtonEditCrud.setOnClickListener(criarDialog);
         imgButtonNewCrud.setOnClickListener(criarDialog);
         imgButtonDeleteCrud.setOnClickListener(criarDialog);
-
-
-        //Existe algum item?
-        if (SessionUtil.getInstance().getSaques().size() < 0) {
-            imgButtonDeleteCrud.setEnabled(false);
-            imgButtonEditCrud.setEnabled(false);
-        }
 
 
         dialogCrud.setNegativeButton("CANCELAR", new DialogInterface.OnClickListener()
@@ -256,7 +293,7 @@ public class SaqueFragment extends Fragment {
                 String retorno = validarSaque();
 
                 if (retorno.length() > 0) {
-                    Toast.makeText(getContext(), retorno, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), retorno, Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -276,32 +313,42 @@ public class SaqueFragment extends Fragment {
 
                     if (operacao.equals("Cadastrar")) {
                         if (salvar(saque)) {
-                            Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_SHORT).show();
                         }
                     } else {
                         if (editar(saque)) {
-                            Toast.makeText(getContext(), "Editado com Sucesso", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Editado com Sucesso", Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(getContext(), "Não foi Possível Editar", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Não foi Possível Editar", Toast.LENGTH_SHORT).show();
                         }
                     }
                 } else if (operacao.equals("Deletar")) {
                     if (deletar()) {
-                        Toast.makeText(getContext(), "Deletado com Sucesso", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Deletado com Sucesso", Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(getContext(), "Não foi Possível Deletar", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Não foi Possível Deletar", Toast.LENGTH_SHORT).show();
                     }
                 }
 
-                TelaHelper.atualizarSession(saque);
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        TelaHelper.atualizarSession(saque);
+                    }
+                });
+                t.start();
 
                 saques = SessionUtil.getInstance().getSaques();
                 if (saques != null) {
                     AdapterSaques adapterSaques = new AdapterSaques(getContext(), saques);
                     lstSaques.setAdapter(adapterSaques);
                 }
+
+                atualizarTotalSaque();
+
             }
         })
                 .
@@ -423,4 +470,15 @@ public class SaqueFragment extends Fragment {
         return retorno;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        //Deu erro?
+        if (SessionUtil.getInstance().getInvestidor().getId() == null || SessionUtil.getInstance().getInvestidor().getId() < 1) {
+            Intent intent = new Intent(getContext(), ActivityLogin.class);
+            SessionUtil.getInstance().clear();
+            startActivity(intent);
+        }
+    }
 }

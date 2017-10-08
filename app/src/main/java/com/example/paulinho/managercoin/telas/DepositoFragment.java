@@ -2,6 +2,7 @@ package com.example.paulinho.managercoin.telas;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
@@ -14,6 +15,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.paulinho.managercoin.R;
@@ -42,6 +44,8 @@ public class DepositoFragment extends Fragment {
     private ListView lstDepositos;
     private Spinner spnClassificacaoDeposito;
     private ImageButton imgAdd;
+    private ImageButton imgReflesh;
+    private TextView txtTotalDepositado;
 
     private LayoutInflater inflater;
 
@@ -56,7 +60,6 @@ public class DepositoFragment extends Fragment {
 
     private Deposito deposito;
     private List<EntidadeDominio> depositos = new ArrayList<>();
-    private List<EntidadeDominio> lista = new ArrayList<>();
     private List<EntidadeDominio> moedas = new ArrayList<>();
 
     private IStrategy iStrategy;
@@ -88,8 +91,11 @@ public class DepositoFragment extends Fragment {
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.activity_depositos, container, false);
 
         imgAdd = (ImageButton) rootView.findViewById(R.id.imgAddDeposito);
+        imgReflesh = (ImageButton) rootView.findViewById(R.id.imgRefleshDeposito);
         lstDepositos = (ListView) rootView.findViewById(R.id.lstDepositos);
         spnClassificacaoDeposito = (Spinner) rootView.findViewById(R.id.spnClassificacaoDeposito);
+        txtTotalDepositado = (TextView) rootView.findViewById(R.id.txtTotalDepositado);
+
         List<String> classificacao = new ArrayList<>();
         classificacao.add("Data");
         classificacao.add("Moeda");
@@ -102,8 +108,10 @@ public class DepositoFragment extends Fragment {
         spnClassificacaoDeposito.setAdapter(adapterClassif);
 
         depositos = SessionUtil.getInstance().getDepositos();
-        AdapterDepositos adapterDepositos = new AdapterDepositos(getContext(), depositos);
+        final AdapterDepositos adapterDepositos = new AdapterDepositos(getContext(), depositos);
         lstDepositos.setAdapter(adapterDepositos);
+
+        atualizarTotalDeposito();
 
         lstDepositos.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -122,7 +130,23 @@ public class DepositoFragment extends Fragment {
         imgAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showDialog();
+                deposito = new Deposito();
+                criarDialogDeposito("Cadastrar");
+            }
+        });
+
+        imgReflesh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (SessionUtil.getInstance().getDepositos() != null) {
+                    AdapterDepositos adapterDepositos = new AdapterDepositos(getContext(), SessionUtil.getInstance().getDepositos());
+                    lstDepositos.setAdapter(adapterDepositos);
+                }
+
+                atualizarTotalDeposito();
+
+
             }
         });
 
@@ -145,6 +169,29 @@ public class DepositoFragment extends Fragment {
         });
 
         return rootView;
+    }
+
+    private void atualizarTotalDeposito(){
+
+        BigDecimal retorno = new BigDecimal("0.0");
+
+        for(EntidadeDominio entidadeDominio : SessionUtil.getInstance().getDepositos()){
+
+            if(entidadeDominio instanceof Deposito){
+                Deposito deposito =  new Deposito();
+                deposito = (Deposito) entidadeDominio;
+
+                if(deposito.getMoeda().getNome().equals("REAL")){
+                    retorno = retorno.add(deposito.getValorAplicado());
+                }
+
+            }
+
+        }
+
+
+        txtTotalDepositado.setText(retorno.toString());
+
     }
 
     /**
@@ -182,14 +229,6 @@ public class DepositoFragment extends Fragment {
         imgButtonEditCrud.setOnClickListener(criarDialog);
         imgButtonNewCrud.setOnClickListener(criarDialog);
         imgButtonDeleteCrud.setOnClickListener(criarDialog);
-
-
-        //Existe algum item?
-        if (SessionUtil.getInstance().getDepositos().size() < 0) {
-            imgButtonDeleteCrud.setEnabled(false);
-            imgButtonEditCrud.setEnabled(false);
-        }
-
 
         dialogCrud.setNegativeButton("CANCELAR", new DialogInterface.OnClickListener()
 
@@ -257,7 +296,7 @@ public class DepositoFragment extends Fragment {
                 String retorno = validarDeposito();
 
                 if (retorno.length() > 0) {
-                    Toast.makeText(getContext(), retorno, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), retorno, Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -277,35 +316,45 @@ public class DepositoFragment extends Fragment {
 
                     if (operacao.equals("Cadastrar")) {
                         if (salvar(deposito)) {
-                            Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_SHORT).show();
                         }
 
                     } else {
 
                         if (editar(deposito)) {
-                            Toast.makeText(getContext(), "Editado com Sucesso", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Editado com Sucesso", Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(getContext(), "Não foi Possível Editar", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Não foi Possível Editar", Toast.LENGTH_SHORT).show();
                         }
                     }
 
                 } else if (operacao.equals("Deletar")) {
                     if (deletar()) {
-                        Toast.makeText(getContext(), "Deletado com Sucesso", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Deletado com Sucesso", Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(getContext(), "Não foi Possível Deletar", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Não foi Possível Deletar", Toast.LENGTH_SHORT).show();
                     }
                 }
-                TelaHelper.atualizarSession(deposito);
+
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        TelaHelper.atualizarSession(deposito);
+                    }
+                });
+                t.start();
+
 
                 depositos = SessionUtil.getInstance().getDepositos();
                 if (depositos != null) {
                     AdapterDepositos adapterDepositos = new AdapterDepositos(getContext(), depositos);
                     lstDepositos.setAdapter(adapterDepositos);
-
                 }
+
+                atualizarTotalDeposito();
 
             }
         })
@@ -426,6 +475,18 @@ public class DepositoFragment extends Fragment {
             retorno = "Valor Aplicado inválido";
         }
         return retorno;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        //Deu erro?
+        if (SessionUtil.getInstance().getInvestidor().getId() == null || SessionUtil.getInstance().getInvestidor().getId() < 1) {
+            Intent intent = new Intent(getContext(), ActivityLogin.class);
+            SessionUtil.getInstance().clear();
+            startActivity(intent);
+        }
     }
 
 }

@@ -33,4 +33,7 @@
     <string name="moedas">Moedas</string>
     <string name="movimentacoes">Movimentações</string>
     <string name="tipo">Tipo</string>
+    <string name="logout">Logout</string>
+    <string name="reflesh">Atualizar</string>
+    <string name="total_depositado">Total Depositado:</string>
 </resources>

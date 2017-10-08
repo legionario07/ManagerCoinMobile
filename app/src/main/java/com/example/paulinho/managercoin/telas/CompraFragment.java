@@ -2,6 +2,7 @@ package com.example.paulinho.managercoin.telas;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
@@ -43,6 +44,7 @@ public class CompraFragment extends Fragment {
     private Spinner spnClassificacaoCompra;
     private LayoutInflater inflater;
     private ImageButton imgAdd;
+    private ImageButton imgReflesh;
 
     private AdapterCompras adapterCompras;
     private ArrayAdapter adapterMoedas;
@@ -91,6 +93,7 @@ public class CompraFragment extends Fragment {
 
 
         imgAdd = (ImageButton) rootView.findViewById(R.id.imgAddCompra);
+        imgReflesh = (ImageButton) rootView.findViewById(R.id.imgRefleshCompra);
         lstCompras = (ListView) rootView.findViewById(R.id.lstCompras);
         spnClassificacaoCompra = (Spinner) rootView.findViewById(R.id.spnClassificacaoCompra);
         List<String> classificacao = new ArrayList<>();
@@ -126,7 +129,19 @@ public class CompraFragment extends Fragment {
         imgAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showDialog();
+                compra = new Compra();
+                criarDialogCompra("Cadastrar");
+            }
+        });
+
+        imgReflesh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (SessionUtil.getInstance().getCompras() != null) {
+                    AdapterCompras adapterCompras = new AdapterCompras(getContext(), SessionUtil.getInstance().getCompras());
+                    lstCompras.setAdapter(adapterCompras);
+                }
             }
         });
 
@@ -171,7 +186,7 @@ public class CompraFragment extends Fragment {
                     criarDialogCompra("Cadastrar");
                 } else if (imgButtonDeleteCrud.getId() == view.getId()) {
                     criarDialogCompra("Deletar");
-                } else{
+                } else {
                     criarDialogCompra("Editar");
                 }
 
@@ -189,7 +204,7 @@ public class CompraFragment extends Fragment {
         imgButtonEditCrud.setOnClickListener(criarDialog);
 
         //Existe algum item?
-        if(SessionUtil.getInstance().getCompras().size()<0){
+        if (SessionUtil.getInstance().getCompras().size() < 0) {
             imgButtonDeleteCrud.setEnabled(false);
             imgButtonEditCrud.setEnabled(false);
         }
@@ -258,7 +273,7 @@ public class CompraFragment extends Fragment {
                 String retorno = validarCompra();
 
                 if (retorno.length() > 0) {
-                    Toast.makeText(getContext(), retorno, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), retorno, Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -277,30 +292,38 @@ public class CompraFragment extends Fragment {
                     compra.setMoeda((Moeda) spnMoeda.getSelectedItem());
                     compra.getMoeda().setTaxa(new BigDecimal(taxa.getText().toString()));
 
-                    if(operacao.equals("Cadastrar")) {
+                    if (operacao.equals("Cadastrar")) {
                         if (salvar(compra)) {
-                            Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Cadastrado com Sucesso", Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Não foi Possível Cadastrar", Toast.LENGTH_SHORT).show();
                         }
-                    } else{
+                    } else {
 
                         if (editar(compra)) {
-                            Toast.makeText(getContext(), "Editado com Sucesso", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Editado com Sucesso", Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(getContext(), "Não foi Possível Editar", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Não foi Possível Editar", Toast.LENGTH_SHORT).show();
                         }
 
                     }
                 } else if (operacao.equals("Deletar")) {
                     if (deletar()) {
-                        Toast.makeText(getContext(), "Deletado com Sucesso", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Deletado com Sucesso", Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(getContext(), "Não foi Possível Deletar", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Não foi Possível Deletar", Toast.LENGTH_SHORT).show();
                     }
                 }
 
-                TelaHelper.atualizarSession(compra);
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        TelaHelper.atualizarSession(compra);
+                    }
+                });
+                t.start();
+
 
                 compras = SessionUtil.getInstance().getCompras();
                 if (compras != null) {
@@ -429,6 +452,18 @@ public class CompraFragment extends Fragment {
         }
 
         return retorno;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        //Deu erro?
+        if (SessionUtil.getInstance().getInvestidor().getId() == null || SessionUtil.getInstance().getInvestidor().getId() < 1) {
+            Intent intent = new Intent(getContext(), ActivityLogin.class);
+            SessionUtil.getInstance().clear();
+            startActivity(intent);
+        }
     }
 
 

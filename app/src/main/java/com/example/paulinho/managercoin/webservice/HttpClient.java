@@ -170,8 +170,6 @@ public class HttpClient {
             conn.setRequestMethod("PUT");
             conn.setRequestProperty("Content-Type", "application/json");
 
-            gson = new Gson();
-
             String dados = gson.toJson(entidadeDominio);
 
             DataOutputStream wr = new DataOutputStream(
